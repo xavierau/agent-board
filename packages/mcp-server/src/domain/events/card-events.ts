@@ -83,6 +83,17 @@ export type CommentAdded = {
   readonly occurredAt: string;
 };
 
+export type CardAssigned = {
+  readonly type: 'CardAssigned';
+  readonly streamId: string;
+  readonly version: number;
+  readonly actorId: string;
+  readonly payload: {
+    readonly assigneeId: string | null;
+  };
+  readonly occurredAt: string;
+};
+
 export type CardEvent =
   | CardCreated
   | CardMoved
@@ -90,13 +101,15 @@ export type CardEvent =
   | CardArchived
   | LabelAdded
   | LabelRemoved
-  | CommentAdded;
+  | CommentAdded
+  | CardAssigned;
 
 export {
   createCardCreatedEvent,
   createCardMovedEvent,
   createCardUpdatedEvent,
   createCardArchivedEvent,
+  createCardAssignedEvent,
 } from './card-event-factories.js';
 
 export {

@@ -6,6 +6,7 @@ export type CardView = {
   readonly position: number;
   readonly boardId: string;
   readonly archived: boolean;
+  readonly assignee: string | null;
   readonly labels: ReadonlyArray<{ label: string; color: string }>;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -18,4 +19,5 @@ export interface CardReadModel {
   findByBoard(boardId: string): CardView[];
   findAll(): CardView[];
   archive(id: string): void;
+  assign(id: string, assigneeId: string | null): void;
 }

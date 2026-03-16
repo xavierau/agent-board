@@ -6,6 +6,7 @@ import {
   updateCardSchema,
   archiveCardSchema,
   listCardsSchema,
+  assignCardSchema,
 } from './tool-schemas.js';
 import { jsonResult, validateActor, getActorInfo } from './tool-helpers.js';
 
@@ -18,6 +19,7 @@ export function registerCardTools(
   registerUpdateCard(server, deps);
   registerArchiveCard(server, deps);
   registerListCards(server, deps);
+  registerAssignCard(server, deps);
 }
 
 function registerCreateCard(
@@ -93,5 +95,21 @@ function registerListCards(
     inputSchema: listCardsSchema,
   }, async (input) => {
     return jsonResult(useCases.listCards.execute(input));
+  });
+}
+
+function registerAssignCard(
+  server: McpServer,
+  deps: McpDeps,
+): void {
+  server.registerTool('assign-card', {
+    description: 'Assign or unassign an agent to a card',
+    inputSchema: assignCardSchema,
+  }, async (input) => {
+    const err = validateActor(deps.actorValidator, input.actorId);
+    if (err) return err;
+    const result = deps.useCases.assignCard.execute(input);
+    const actor = getActorInfo(deps.agentRegistry, input.actorId);
+    return jsonResult({ ...result, actor });
   });
 }

@@ -22,6 +22,7 @@ import { AddLabelUseCase } from './application/use-cases/add-label.js';
 import { RemoveLabelUseCase } from './application/use-cases/remove-label.js';
 import { AddCommentUseCase } from './application/use-cases/add-comment.js';
 import { ListCommentsUseCase } from './application/use-cases/list-comments.js';
+import { AssignCardUseCase } from './application/use-cases/assign-card.js';
 import { createMcpServer } from './infrastructure/mcp/server.js';
 import { OrgActorValidator } from './infrastructure/validation/actor-validator.js';
 import { loadOrgConfig } from './infrastructure/config/org-config-loader.js';
@@ -34,7 +35,7 @@ async function main(): Promise<void> {
   const orgConfig = loadOrgConfig(orgPath);
   const validator = new OrgActorValidator(orgConfig);
 
-  const deps = buildDependencies(db, validator);
+  const deps = buildDependencies(db, validator, validator);
   ensureDefaultBoard(deps.useCases.createBoard, deps.useCases.listBoards);
 
   const server = createMcpServer(deps);
@@ -73,16 +74,20 @@ function buildInfrastructure(db: import('better-sqlite3').Database) {
 function buildDependencies(
   db: import('better-sqlite3').Database,
   validator: OrgActorValidator,
+  registry: OrgActorValidator,
 ) {
   const i = buildInfrastructure(db);
   return {
-    useCases: buildUseCases(i),
+    useCases: buildUseCases(i, registry),
     actorValidator: validator,
     agentRegistry: validator,
   };
 }
 
-function buildUseCases(i: ReturnType<typeof buildInfrastructure>) {
+function buildUseCases(
+  i: ReturnType<typeof buildInfrastructure>,
+  registry: OrgActorValidator,
+) {
   return {
     createBoard: new CreateBoardUseCase(i.eventStore, i.boardReadModel, i.boardProjection),
     listBoards: new ListBoardsUseCase(i.boardReadModel),
@@ -95,6 +100,7 @@ function buildUseCases(i: ReturnType<typeof buildInfrastructure>) {
     removeLabel: new RemoveLabelUseCase(i.eventStore, i.cardReadModel, i.labelProjection),
     addComment: new AddCommentUseCase(i.eventStore, i.cardReadModel, i.commentReadModel, i.commentProjection),
     listComments: new ListCommentsUseCase(i.commentReadModel),
+    assignCard: new AssignCardUseCase(i.eventStore, i.cardReadModel, i.cardProjection, registry),
   };
 }
 

@@ -17,6 +17,8 @@ export class CardProjection {
         return this.applyUpdated(event);
       case 'CardArchived':
         return this.applyArchived(event);
+      case 'CardAssigned':
+        return this.applyAssigned(event);
       default:
         return this.requireCard(event.streamId);
     }
@@ -33,6 +35,7 @@ export class CardProjection {
       position: event.payload.position,
       boardId: event.payload.boardId,
       archived: false,
+      assignee: null,
       labels: [],
       createdAt: event.occurredAt,
       updatedAt: event.occurredAt,
@@ -68,6 +71,17 @@ export class CardProjection {
   ): CardView {
     const current = this.requireCard(event.streamId);
     return { ...current, archived: true, updatedAt: event.occurredAt };
+  }
+
+  private applyAssigned(
+    event: Extract<CardEvent, { type: 'CardAssigned' }>,
+  ): CardView {
+    const current = this.requireCard(event.streamId);
+    return {
+      ...current,
+      assignee: event.payload.assigneeId,
+      updatedAt: event.occurredAt,
+    };
   }
 
   private requireCard(id: string): CardView {

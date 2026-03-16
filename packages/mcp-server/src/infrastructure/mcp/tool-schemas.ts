@@ -42,6 +42,12 @@ export const listCardsSchema = z.object({
   boardId: z.string().uuid().optional(),
 });
 
+export const assignCardSchema = z.object({
+  cardId: z.string().uuid(),
+  assigneeId: z.string().nullable(),
+  actorId: z.string().min(1),
+});
+
 // Label tools
 export const addLabelSchema = z.object({
   cardId: z.string().uuid(),

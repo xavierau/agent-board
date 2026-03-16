@@ -11,6 +11,7 @@ interface CardRow {
   position: number;
   board_id: string;
   archived: number;
+  assignee: string | null;
   created_at: string;
   updated_at: string;
   label_data: string | null;

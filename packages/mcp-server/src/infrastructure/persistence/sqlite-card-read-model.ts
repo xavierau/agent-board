@@ -11,12 +11,13 @@ export class SqliteCardReadModel implements CardReadModel {
   private readonly byBoardStmt: Database.Statement;
   private readonly allStmt: Database.Statement;
   private readonly archiveStmt: Database.Statement;
+  private readonly assignStmt: Database.Statement;
 
   constructor(db: Database.Database) {
     this.upsertStmt = db.prepare(
       `INSERT OR REPLACE INTO cards
-         (id, title, description, column_name, position, board_id, archived, labels, created_at, updated_at)
-       VALUES (@id, @title, @description, @column, @position, @boardId, @archived, @labels, @createdAt, @updatedAt)`,
+         (id, title, description, column_name, position, board_id, archived, assignee, labels, created_at, updated_at)
+       VALUES (@id, @title, @description, @column, @position, @boardId, @archived, @assignee, @labels, @createdAt, @updatedAt)`,
     );
     this.byIdStmt = db.prepare('SELECT * FROM cards WHERE id = ?');
     this.byColumnStmt = db.prepare(
@@ -31,6 +32,9 @@ export class SqliteCardReadModel implements CardReadModel {
     this.archiveStmt = db.prepare(
       'UPDATE cards SET archived = 1 WHERE id = ?',
     );
+    this.assignStmt = db.prepare(
+      'UPDATE cards SET assignee = ? WHERE id = ?',
+    );
   }
 
   upsert(card: CardView): void {
@@ -42,6 +46,7 @@ export class SqliteCardReadModel implements CardReadModel {
       position: card.position,
       boardId: card.boardId,
       archived: card.archived ? 1 : 0,
+      assignee: card.assignee,
       labels: JSON.stringify(card.labels),
       createdAt: card.createdAt,
       updatedAt: card.updatedAt,
@@ -71,6 +76,10 @@ export class SqliteCardReadModel implements CardReadModel {
   archive(id: string): void {
     this.archiveStmt.run(id);
   }
+
+  assign(id: string, assigneeId: string | null): void {
+    this.assignStmt.run(assigneeId, id);
+  }
 }
 
 type CardRow = {
@@ -81,6 +90,7 @@ type CardRow = {
   position: number;
   board_id: string;
   archived: number;
+  assignee: string | null;
   labels: string;
   created_at: string;
   updated_at: string;
@@ -95,6 +105,7 @@ function toCardView(row: CardRow): CardView {
     position: row.position,
     boardId: row.board_id,
     archived: row.archived === 1,
+    assignee: row.assignee ?? null,
     labels: JSON.parse(row.labels),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

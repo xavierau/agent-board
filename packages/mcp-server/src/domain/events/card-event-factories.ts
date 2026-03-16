@@ -3,6 +3,7 @@ import type {
   CardMoved,
   CardUpdated,
   CardArchived,
+  CardAssigned,
   LabelAdded,
   LabelRemoved,
   CommentAdded,
@@ -102,6 +103,26 @@ export function createCardArchivedEvent(
     version: params.version,
     actorId: params.actorId,
     payload: {} as Record<string, never>,
+    occurredAt: new Date().toISOString(),
+  };
+}
+
+type AssignCardParams = {
+  readonly streamId: string;
+  readonly actorId: string;
+  readonly version: number;
+  readonly assigneeId: string | null;
+};
+
+export function createCardAssignedEvent(
+  params: AssignCardParams,
+): CardAssigned {
+  return {
+    type: 'CardAssigned',
+    streamId: params.streamId,
+    version: params.version,
+    actorId: params.actorId,
+    payload: { assigneeId: params.assigneeId },
     occurredAt: new Date().toISOString(),
   };
 }

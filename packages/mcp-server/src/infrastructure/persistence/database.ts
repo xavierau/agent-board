@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS cards (
   position INTEGER NOT NULL DEFAULT 0,
   board_id TEXT NOT NULL DEFAULT '',
   archived INTEGER NOT NULL DEFAULT 0,
+  assignee TEXT DEFAULT NULL,
   labels TEXT NOT NULL DEFAULT '[]',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

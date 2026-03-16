@@ -64,6 +64,26 @@ writeRouter.post('/api/boards', (req: Request, res: Response) => {
   res.status(201).json(board);
 });
 
+writeRouter.patch('/api/boards/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, actorId } = req.body;
+  if (!name || (typeof name === 'string' && name.trim() === '')) {
+    res.status(400).json({ error: 'name is required' }); return;
+  }
+
+  const board = db.prepare('SELECT * FROM boards WHERE id = ?').get(id);
+  if (!board) { res.status(404).json({ error: 'Board not found' }); return; }
+
+  const actor = actorId ?? 'web-user';
+  const now = new Date().toISOString();
+
+  db.prepare('UPDATE boards SET name = ?, updated_at = ? WHERE id = ?').run(name.trim(), now, id);
+  appendEvent(id, 'BoardUpdated', { name: name.trim() }, actor);
+
+  const updated = db.prepare('SELECT * FROM boards WHERE id = ?').get(id);
+  res.status(200).json(updated);
+});
+
 writeRouter.post('/api/boards/:boardId/cards', (req: Request, res: Response) => {
   const { boardId } = req.params;
   const { title, description, actorId } = req.body;
@@ -157,6 +177,27 @@ writeRouter.post('/api/cards/:id/comments', (req: Request, res: Response) => {
 
   const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(commentId);
   res.status(201).json(comment);
+});
+
+writeRouter.patch('/api/cards/:id/assign', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { assigneeId, actorId } = req.body;
+
+  const card = db.prepare('SELECT id FROM cards WHERE id = ?').get(id);
+  if (!card) { res.status(404).json({ error: 'Card not found' }); return; }
+
+  if (assigneeId !== null && assigneeId !== undefined && typeof assigneeId !== 'string') {
+    res.status(400).json({ error: 'assigneeId must be a string or null' }); return;
+  }
+
+  const actor = actorId ?? 'web-user';
+  const assignee = assigneeId === undefined ? null : assigneeId;
+
+  db.prepare('UPDATE cards SET assignee = ? WHERE id = ?').run(assignee, id);
+  appendEvent(id, 'CardAssigned', { assigneeId: assignee }, actor);
+
+  const updated = db.prepare('SELECT * FROM cards WHERE id = ?').get(id);
+  res.status(200).json(updated);
 });
 
 writeRouter.patch('/api/comments/:id', (req: Request, res: Response) => {

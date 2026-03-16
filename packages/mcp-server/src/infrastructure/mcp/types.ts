@@ -9,6 +9,7 @@ import type { AddLabelUseCase } from '../../application/use-cases/add-label.js';
 import type { RemoveLabelUseCase } from '../../application/use-cases/remove-label.js';
 import type { AddCommentUseCase } from '../../application/use-cases/add-comment.js';
 import type { ListCommentsUseCase } from '../../application/use-cases/list-comments.js';
+import type { AssignCardUseCase } from '../../application/use-cases/assign-card.js';
 import type { ActorValidator } from '../validation/actor-validator.js';
 import type { AgentRegistry } from '../../domain/repositories/agent-registry.js';
 
@@ -24,6 +25,7 @@ export type UseCases = {
   readonly removeLabel: RemoveLabelUseCase;
   readonly addComment: AddCommentUseCase;
   readonly listComments: ListCommentsUseCase;
+  readonly assignCard: AssignCardUseCase;
 };
 
 export type McpDeps = {
