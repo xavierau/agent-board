@@ -503,6 +503,52 @@
       background: #fff;
       margin-top: 6px;
     }
+
+    /* Mention badge */
+    .mention {
+      background: #ddf4ff;
+      color: #0969da;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 500;
+      font-size: 0.95em;
+      white-space: nowrap;
+      cursor: default;
+    }
+
+    /* Autocomplete dropdown */
+    .mention-autocomplete {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      margin-bottom: 4px;
+      background: #fff;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 300;
+      min-width: 280px;
+      width: 100%;
+    }
+    .mention-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .mention-option:hover, .mention-option.active {
+      background: #f0f6ff;
+    }
+    .mention-option-name { font-weight: 600; }
+    .mention-option-role { font-size: 11px; color: #656d76; }
+    .mention-option-id { font-size: 11px; color: #8b949e; }
+
+    /* Mention editor wrapper */
+    .mention-editor-wrap { position: relative; overflow: visible; }
   </style>
 </head>
 <body>
@@ -520,7 +566,7 @@
   </script>
 
   <script type="module">
-    import React, { useState, useEffect, useCallback, createElement, Fragment } from 'react';
+    import React, { useState, useEffect, useCallback, useRef, createElement, Fragment } from 'react';
     import { createRoot } from 'react-dom/client';
 
     const API = '';
@@ -542,14 +588,38 @@
     }
 
     function eventColor(type) {
-      if (type.includes('Created') || type.includes('Added')) return '#1a7f37';
-      if (type.includes('Moved')) return '#0969da';
-      if (type.includes('Updated') || type.includes('Comment')) return '#9a6700';
+      if (type.includes('created') || type.includes('Created') || type.includes('Added')) return '#1a7f37';
+      if (type.includes('moved') || type.includes('Moved')) return '#0969da';
+      if (type.includes('updated') || type.includes('Updated') || type.includes('comment') || type.includes('Comment') || type.includes('renamed')) return '#9a6700';
+      if (type.includes('assigned')) return '#8250df';
       if (type.includes('Archived') || type.includes('Removed')) return '#cf222e';
       return '#656d76';
     }
 
     function eventDescription(evt) {
+      // Support new JSONL audit format
+      if (evt.action) {
+        const d = evt.delta || {};
+        const target = evt.targetTitle || '';
+        if (evt.action === 'card.created') return 'created card "' + target + '"';
+        if (evt.action === 'card.moved') return 'moved "' + target + '" from ' + (d.column?.from || '?') + ' → ' + (d.column?.to || '?');
+        if (evt.action === 'card.updated') {
+          const parts = [];
+          if (d.title) parts.push('title');
+          if (d.description) parts.push('description');
+          return 'updated ' + (parts.join(' & ') || 'card') + ' on "' + target + '"';
+        }
+        if (evt.action === 'card.assigned') return d.assignee?.to ? 'assigned "' + target + '" to ' + d.assignee.to : 'unassigned "' + target + '"';
+        if (evt.action === 'comment.added') {
+          const mentionText = evt.mentions?.length ? ' (mentioned ' + evt.mentions.map(m => '@' + m).join(', ') + ')' : '';
+          return 'commented on "' + target + '"' + mentionText;
+        }
+        if (evt.action === 'comment.updated') return 'edited comment on "' + target + '"';
+        if (evt.action === 'board.created') return 'created board "' + target + '"';
+        if (evt.action === 'board.renamed') return 'renamed board to "' + (d.name?.to || target) + '"';
+        return evt.action;
+      }
+      // Legacy SQLite events format fallback
       try {
         const p = typeof evt.payload === 'string' ? JSON.parse(evt.payload) : evt.payload;
         if (evt.event_type === 'CardCreated') return 'created card "' + (p.title || '') + '"';
@@ -580,6 +650,36 @@
         const raw = marked.parse(text);
         return sanitizeHtml(raw);
       } catch { return text; }
+    }
+
+    function processMentions(html, agents) {
+      if (!html || !agents || agents.size === 0) return html;
+      // Replace @agent-id in text content (not inside HTML tags, code blocks, or pre blocks)
+      // Strategy: split by code/pre blocks and HTML tags, process only text parts
+      const parts = html.split(/(<code[\s\S]*?<\/code>|<pre[\s\S]*?<\/pre>|<[^>]+>)/gi);
+      return parts.map(part => {
+        // Skip HTML tags, code blocks, and pre blocks
+        if (part.startsWith('<')) return part;
+        // Replace @word patterns in text nodes
+        return part.replace(/@([a-zA-Z0-9_-]+)/g, (match, id) => {
+          const agent = agents.get(id);
+          if (!agent) return match;
+          return '<span class="mention" title="' + agent.display_name + ' (' + agent.role_type + ')">@' + agent.display_name + '</span>';
+        });
+      }).join('');
+    }
+
+    function renderMarkdownWithMentions(text, agents) {
+      const html = renderMarkdown(text);
+      return processMentions(html, agents);
+    }
+
+    function stripMentions(text, agents) {
+      if (!text || !agents || agents.size === 0) return text;
+      return text.replace(/@([a-zA-Z0-9_-]+)/g, (match, id) => {
+        const agent = agents.get(id);
+        return agent ? '@' + agent.display_name : match;
+      });
     }
 
     function stripMarkdown(text) {
@@ -683,7 +783,7 @@
         onClick: () => onClick(card)
       }, [
         h('div', { className: 'card-title', key: 't' }, card.title),
-        card.description ? h('div', { className: 'card-desc', key: 'd' }, truncate(stripMarkdown(card.description), 80)) : null,
+        card.description ? h('div', { className: 'card-desc', key: 'd' }, truncate(stripMarkdown(stripMentions(card.description, agents)), 80)) : null,
         card.labels && card.labels.length > 0
           ? hs('div', { className: 'card-labels', key: 'l' },
               card.labels.map((lb, i) => h(LabelBadge, { ...lb, key: i })))
@@ -771,9 +871,111 @@
       ]);
     }
 
-    function MarkdownEditorWidget({ value, onChange, onSubmit, onCancel, submitLabel, submitting, placeholder, isReply }) {
+    function useMentionAutocomplete({ textareaRef, agents, value, onChange }) {
+      const [show, setShow] = useState(false);
+      const [query, setQuery] = useState('');
+      const [activeIdx, setActiveIdx] = useState(0);
+      const [triggerPos, setTriggerPos] = useState(null);
+
+      const hasAgents = agents && agents.size > 0;
+
+      function getMatches() {
+        if (!hasAgents) return [];
+        const q = query.toLowerCase();
+        return Array.from(agents.values())
+          .filter(a => a.id.toLowerCase().includes(q) || a.display_name.toLowerCase().includes(q))
+          .slice(0, 5);
+      }
+
+      function insertMention(agent) {
+        const ta = textareaRef.current;
+        if (!ta || triggerPos === null) return;
+        const before = value.slice(0, triggerPos);
+        const after = value.slice(ta.selectionStart);
+        const inserted = before + '@' + agent.id + ' ' + after;
+        onChange(inserted);
+        setShow(false);
+        setQuery('');
+        setTriggerPos(null);
+        // Restore cursor after React re-renders
+        const cursorPos = triggerPos + agent.id.length + 2;
+        setTimeout(() => { ta.focus(); ta.setSelectionRange(cursorPos, cursorPos); }, 0);
+      }
+
+      function handleInput(e) {
+        if (!hasAgents) return;
+        const ta = e.target;
+        const pos = ta.selectionStart;
+        const text = ta.value;
+        // Search backward from cursor for @
+        let atPos = -1;
+        for (let i = pos - 1; i >= 0; i--) {
+          const ch = text[i];
+          if (ch === '@') { atPos = i; break; }
+          if (ch === ' ' || ch === '\n') break;
+        }
+        if (atPos >= 0 && (atPos === 0 || /[\s\n]/.test(text[atPos - 1]))) {
+          const q = text.slice(atPos + 1, pos);
+          if (/^[a-zA-Z0-9_-]*$/.test(q)) {
+            setTriggerPos(atPos);
+            setQuery(q);
+            setShow(true);
+            setActiveIdx(0);
+            return;
+          }
+        }
+        setShow(false);
+      }
+
+      function handleKeyDown(e) {
+        if (!show) return;
+        const matches = getMatches();
+        if (matches.length === 0) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => (i + 1) % matches.length); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => (i - 1 + matches.length) % matches.length); }
+        else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insertMention(matches[activeIdx]); }
+        else if (e.key === 'Escape') { setShow(false); }
+      }
+
+      const matches = show ? getMatches() : [];
+
+      useEffect(() => {
+        if (!show) return;
+        function onClick(e) {
+          const el = document.querySelector('.mention-autocomplete');
+          if (el && !el.contains(e.target)) setShow(false);
+        }
+        document.addEventListener('mousedown', onClick);
+        return () => document.removeEventListener('mousedown', onClick);
+      }, [show]);
+
+      return {
+        onInput: handleInput,
+        onKeyDown: handleKeyDown,
+        dropdown: show && matches.length > 0
+          ? h('div', { className: 'mention-autocomplete' },
+              matches.map((a, i) =>
+                hs('div', {
+                  className: 'mention-option' + (i === activeIdx ? ' active' : ''),
+                  key: a.id,
+                  onMouseDown: (e) => { e.preventDefault(); insertMention(a); },
+                  onMouseEnter: () => setActiveIdx(i),
+                }, [
+                  h('span', { className: 'mention-option-name', key: 'n' }, a.display_name),
+                  h('span', { className: 'mention-option-role', key: 'r' }, a.role_type),
+                  h('span', { className: 'mention-option-id', key: 'id' }, '@' + a.id),
+                ])
+              )
+            )
+          : null,
+      };
+    }
+
+    function MarkdownEditorWidget({ value, onChange, onSubmit, onCancel, submitLabel, submitting, placeholder, isReply, agents }) {
       const [tab, setTab] = useState('write');
+      const taRef = useRef(null);
       const editorClass = 'comment-editor' + (isReply ? ' reply-editor' : '');
+      const mention = useMentionAutocomplete({ textareaRef: taRef, agents, value, onChange });
 
       return hs('div', { className: editorClass }, [
         hs('div', { className: 'comment-editor-tabs', key: 'tabs' }, [
@@ -789,23 +991,31 @@
           }, 'Preview'),
         ]),
         tab === 'write'
-          ? h('textarea', {
-              key: 'textarea',
-              value: value,
-              placeholder: placeholder || 'Write a comment...',
-              onChange: e => onChange(e.target.value),
-              autoFocus: true,
-            })
+          ? hs('div', { className: 'mention-editor-wrap', key: 'write-wrap' }, [
+              h('textarea', {
+                key: 'textarea',
+                ref: taRef,
+                value: value,
+                placeholder: placeholder || 'Write a comment...',
+                onChange: e => onChange(e.target.value),
+                onInput: mention.onInput,
+                onKeyDown: mention.onKeyDown,
+                autoFocus: true,
+              }),
+              mention.dropdown,
+            ])
           : h('div', {
               className: 'comment-editor-preview md-content',
               key: 'preview-content',
               dangerouslySetInnerHTML: {
-                __html: value.trim() ? renderMarkdown(value) : '<span style="color:#8b949e">Nothing to preview</span>',
+                __html: value.trim()
+                  ? (agents ? renderMarkdownWithMentions(value, agents) : renderMarkdown(value))
+                  : '<span style="color:#8b949e">Nothing to preview</span>',
               },
             }),
         hs('div', { className: 'comment-editor-footer', key: 'footer' }, [
           h('span', { className: 'comment-editor-hint', key: 'hint' },
-            'Supports **bold**, *italic*, `code`, tables, lists'),
+            'Supports **bold**, *italic*, `code`, tables, lists, @mentions'),
           hs('div', { style: { display: 'flex', gap: '6px' }, key: 'btns' }, [
             onCancel ? h('button', {
               className: 'btn-cancel',
@@ -881,9 +1091,10 @@
               submitting: editSaving,
               placeholder: 'Edit comment...',
               isReply: false,
+              agents,
             })
           : h('div', { className: 'comment-text md-content', key: 'text',
-              dangerouslySetInnerHTML: { __html: renderMarkdown(currentText) } }),
+              dangerouslySetInnerHTML: { __html: renderMarkdownWithMentions(currentText, agents) } }),
         !editing ? hs('div', { className: 'comment-actions', key: 'actions' }, [
           h('button', { className: 'comment-action', key: 'reply',
             onClick: () => setShowReply(!showReply) }, 'Reply'),
@@ -901,6 +1112,7 @@
               submitting: replyPosting,
               placeholder: 'Write a reply...',
               isReply: true,
+              agents,
             })
           : null,
         replies.length > 0
@@ -941,7 +1153,7 @@
       ]);
     }
 
-    function AddCommentForm({ cardId, onAdded, actingAgentId }) {
+    function AddCommentForm({ cardId, onAdded, actingAgentId, agents }) {
       const [text, setText] = useState('');
       const [posting, setPosting] = useState(false);
 
@@ -965,14 +1177,16 @@
         submitting: posting,
         placeholder: 'Write a comment...',
         isReply: false,
+        agents,
       });
     }
 
-    function DescriptionSection({ card, actingAgentId }) {
+    function DescriptionSection({ card, actingAgentId, agents }) {
       const [editing, setEditing] = useState(false);
       const [draft, setDraft] = useState('');
       const [saving, setSaving] = useState(false);
       const [desc, setDesc] = useState(card.description || '');
+      const descTaRef = useRef(null);
 
       function startEdit() { setDraft(desc); setEditing(true); }
       function cancelEdit() { setEditing(false); }
@@ -987,15 +1201,23 @@
           .finally(() => setSaving(false));
       }
 
+      const mention = useMentionAutocomplete({ textareaRef: descTaRef, agents, value: draft, onChange: setDraft });
+
       if (editing) {
         return hs('div', { className: 'modal-desc' }, [
-          h('textarea', {
-            className: 'md-editor',
-            key: 'editor',
-            value: draft,
-            onChange: e => setDraft(e.target.value),
-            autoFocus: true,
-          }),
+          hs('div', { className: 'mention-editor-wrap', key: 'editor-wrap' }, [
+            h('textarea', {
+              className: 'md-editor',
+              key: 'editor',
+              ref: descTaRef,
+              value: draft,
+              onChange: e => setDraft(e.target.value),
+              onInput: mention.onInput,
+              onKeyDown: mention.onKeyDown,
+              autoFocus: true,
+            }),
+            mention.dropdown,
+          ]),
           hs('div', { className: 'md-toolbar', key: 'toolbar' }, [
             h('button', { className: 'btn-add', key: 'save', onClick: saveEdit, disabled: saving }, saving ? 'Saving...' : 'Save'),
             h('button', { className: 'btn-cancel', key: 'cancel', onClick: cancelEdit }, 'Cancel'),
@@ -1009,7 +1231,7 @@
           h('button', { className: 'btn-edit-desc', key: 'edit', onClick: startEdit }, 'Edit'),
         ]),
         desc
-          ? h('div', { className: 'md-content', key: 'content', dangerouslySetInnerHTML: { __html: renderMarkdown(desc) } })
+          ? h('div', { className: 'md-content', key: 'content', dangerouslySetInnerHTML: { __html: renderMarkdownWithMentions(desc, agents) } })
           : h('div', { style: { color: '#8b949e', fontSize: '14px' }, key: 'empty' }, 'No description. Click Edit to add one.'),
       ]);
     }
@@ -1085,7 +1307,7 @@
               card.labels.map((lb, i) => h(LabelBadge, { ...lb, key: i })))
           : null,
         h(AssigneeSection, { card, agents, actingAgentId, key: 'assignee' }),
-        h(DescriptionSection, { card, actingAgentId, key: 'desc' }),
+        h(DescriptionSection, { card, actingAgentId, agents, key: 'desc' }),
         h(MoveCardSection, { card, columns, onClose, actingAgentId, key: 'move' }),
         h('div', { className: 'modal-section-title', key: 'ct' },
           'Comments (' + comments.length + ')'),
@@ -1097,21 +1319,27 @@
                 onCommentAdded: handleCommentAdded, onCommentUpdated: handleCommentUpdated,
                 actingAgentId, key: c.id,
               }))),
-        h(AddCommentForm, { cardId: card.id, onAdded: handleCommentAdded, actingAgentId, key: 'add-comment' }),
+        h(AddCommentForm, { cardId: card.id, onAdded: handleCommentAdded, actingAgentId, agents, key: 'add-comment' }),
       ]));
     }
 
     function EventRow({ evt, agents }) {
+      const actionType = evt.action || evt.event_type || '';
+      const actorId = evt.actor || evt.actor_id || '';
+      const timestamp = evt.ts || evt.occurred_at || '';
+      const label = evt.action ? evt.action.replace('.', ' ') : evt.event_type;
       return hs('div', { className: 'event-row' }, [
         h('span', {
           className: 'event-badge',
-          style: { background: eventColor(evt.event_type) },
+          style: { background: eventColor(actionType) },
           key: 'b',
-        }, evt.event_type),
+        }, label),
         h('span', { key: 'd' }, eventDescription(evt)),
         h('span', { className: 'event-actor', key: 'a' },
-          h(AgentDisplay, { actorId: evt.actor_id, agents })),
-        h('span', { className: 'event-time', key: 't' }, timeAgo(evt.occurred_at)),
+          evt.actorName
+            ? h('span', null, evt.actorName)
+            : h(AgentDisplay, { actorId, agents })),
+        h('span', { className: 'event-time', key: 't' }, timeAgo(timestamp)),
       ]);
     }
 
@@ -1121,7 +1349,7 @@
         events.length === 0
           ? h('div', { className: 'empty', key: 'e' }, 'No recent activity')
           : hs('div', { key: 'list' },
-              events.slice(0, 30).map(e => h(EventRow, { evt: e, agents, key: e.id }))),
+              events.slice(0, 30).map((e, i) => h(EventRow, { evt: e, agents, key: e.id || e.ts || i }))),
       ]);
     }
 

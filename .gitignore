@@ -6,3 +6,4 @@ dist/
 .DS_Store
 *.log
 /data/todos.jsonl
+/data/audit.jsonl

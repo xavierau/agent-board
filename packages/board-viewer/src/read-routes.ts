@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { db } from './db.js';
+import { readAuditLog } from './audit-log.js';
 
 export const readRouter = Router();
 
@@ -79,6 +80,13 @@ readRouter.get('/api/cards/:id/comments', (req: Request, res: Response) => {
 });
 
 readRouter.get('/api/events', (req: Request, res: Response) => {
+  const limit = parseInt(req.query.limit as string, 10) || 50;
+  const board = req.query.board as string | undefined;
+  const actor = req.query.actor as string | undefined;
+  res.json(readAuditLog({ limit, board, actor }));
+});
+
+readRouter.get('/api/events/raw', (req: Request, res: Response) => {
   const streamId = req.query.stream_id as string | undefined;
   if (streamId) {
     const events = db.prepare(
