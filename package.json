@@ -1,0 +1,10 @@
+{
+  "name": "my-trello",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter todo-backend dev & pnpm --filter todo-frontend dev"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]
+  }
+}

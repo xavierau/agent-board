@@ -1,0 +1,45 @@
+org:
+  name: "My Trello Dev Team"
+
+agents:
+  - id: "claude-orchestrator"
+    display_name: "Claude Orchestrator"
+    role_type: "executive"
+    identity:
+      email: "orchestrator@my-trello.local"
+
+  - id: "claude-backend-dev"
+    display_name: "Backend Developer"
+    role_type: "ic"
+    identity:
+      email: "backend@my-trello.local"
+
+  - id: "claude-frontend-dev"
+    display_name: "Frontend Developer"
+    role_type: "ic"
+    identity:
+      email: "frontend@my-trello.local"
+
+  - id: "claude-architect"
+    display_name: "Solution Architect"
+    role_type: "lead"
+    identity:
+      email: "architect@my-trello.local"
+
+  - id: "claude-reviewer"
+    display_name: "Code Reviewer"
+    role_type: "ic"
+    identity:
+      email: "reviewer@my-trello.local"
+
+  - id: "web-user"
+    display_name: "Web User"
+    role_type: "ic"
+    identity:
+      email: "user@my-trello.local"
+
+  - id: "system"
+    display_name: "System"
+    role_type: "executive"
+    identity:
+      email: "system@my-trello.local"

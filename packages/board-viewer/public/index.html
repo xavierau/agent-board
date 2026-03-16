@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Board Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e1e4e8;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .header select {
+      padding: 6px 10px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .header-right { font-size: 12px; color: #656d76; }
+
+    /* Board layout */
+    .board-container { padding: 20px 24px; overflow-x: auto; }
+    .columns {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      min-height: 300px;
+    }
+
+    /* Column */
+    .column {
+      background: #f6f8fa;
+      border-radius: 10px;
+      min-width: 280px;
+      max-width: 320px;
+      flex-shrink: 0;
+      border: 1px solid #e1e4e8;
+    }
+    .column-header {
+      padding: 12px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    .column-count {
+      background: #e1e4e8;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .column-cards { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease;
+    }
+    .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .card-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .card-desc {
+      font-size: 12px;
+      color: #656d76;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 260px;
+    }
+    .card-labels { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .label-badge {
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* Activity log */
+    .activity-panel {
+      background: #fff;
+      border-top: 1px solid #e1e4e8;
+      padding: 16px 24px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .activity-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #1a1a2e;
+    }
+    .event-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .event-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .event-actor { color: #656d76; font-size: 12px; }
+    .event-time { color: #8b949e; font-size: 11px; margin-left: auto; white-space: nowrap; }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 60px;
+      overflow-y: auto;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      padding: 24px;
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #656d76;
+      line-height: 1;
+    }
+    .modal-close:hover { color: #1a1a2e; }
+    .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; padding-right: 30px; }
+    .modal-meta { font-size: 12px; color: #8b949e; margin-bottom: 12px; }
+    .modal-desc { font-size: 14px; line-height: 1.6; margin-bottom: 16px; color: #1a1a2e; }
+    .modal-section-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .comment {
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f2f5;
+      font-size: 13px;
+    }
+    .comment-header { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+    .comment-author { font-weight: 600; font-size: 12px; }
+    .comment-time { font-size: 11px; color: #8b949e; }
+    .comment-text { line-height: 1.5; }
+    .comment-replies { margin-left: 20px; border-left: 2px solid #e1e4e8; padding-left: 12px; }
+
+    /* Loading & error */
+    .loading { text-align: center; padding: 40px; color: #656d76; }
+    .error { text-align: center; padding: 40px; color: #cf222e; }
+    .empty { text-align: center; padding: 20px; color: #8b949e; font-size: 13px; }
+
+    /* Add Card Form */
+    .add-card-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      color: #656d76;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .add-card-btn:hover { background: #e1e4e8; color: #1a1a2e; }
+    .add-card-form { padding: 8px; }
+    .add-card-form input,
+    .add-card-form textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      margin-bottom: 6px;
+      resize: vertical;
+    }
+    .add-card-form input:focus,
+    .add-card-form textarea:focus { outline: none; border-color: #0969da; }
+    .add-card-actions { display: flex; gap: 6px; }
+    .btn-add {
+      background: #0969da;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-add:hover { background: #0860c4; }
+    .btn-add:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel {
+      background: none;
+      border: none;
+      padding: 6px 10px;
+      color: #656d76;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { color: #1a1a2e; }
+
+    /* Move-to pills */
+    .move-section { margin-bottom: 16px; }
+    .move-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .move-pill {
+      background: #f0f2f5;
+      border: 1px solid #d0d7de;
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .move-pill:hover { background: #ddf4ff; border-color: #0969da; color: #0969da; }
+    .move-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Comment markdown editor */
+    .comment-editor { margin-top: 12px; border: 1px solid #d0d7de; border-radius: 6px; overflow: hidden; }
+    .comment-editor-tabs { display: flex; border-bottom: 1px solid #d0d7de; background: #f6f8fa; }
+    .comment-tab { padding: 6px 14px; font-size: 12px; cursor: pointer; border: none; background: none; color: #656d76; }
+    .comment-tab.active { background: #fff; border-bottom: 2px solid #0969da; font-weight: 600; color: #1a1a2e; }
+    .comment-editor textarea { width: 100%; min-height: 120px; border: none; padding: 10px; font-family: monospace; font-size: 13px; resize: vertical; outline: none; }
+    .comment-editor-preview { padding: 10px; min-height: 120px; }
+    .comment-editor-footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-top: 1px solid #d0d7de; background: #f6f8fa; }
+    .comment-editor-hint { font-size: 11px; color: #8b949e; }
+
+    /* Reply editor - slightly smaller */
+    .reply-editor textarea { min-height: 80px; }
+
+    /* Comment actions */
+    .comment-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .comment-action { font-size: 11px; color: #656d76; cursor: pointer; background: none; border: none; padding: 0; }
+    .comment-action:hover { color: #0969da; }
+
+    .btn-post {
+      background: #0969da;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-post:hover { background: #0860c4; }
+    .btn-post:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Agent display */
+    .agent-name { font-weight: 600; font-size: 13px; }
+    .agent-unknown { font-style: italic; color: #8b949e; font-size: 12px; }
+    .role-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      margin-left: 4px;
+      vertical-align: middle;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .role-exec { background: #cf222e; }
+    .role-lead { background: #0969da; }
+    .role-ic { background: #656d76; }
+    .agent-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #656d76;
+    }
+    .agent-selector select {
+      padding: 4px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    /* Board List */
+    .board-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .board-list-title {
+      padding: 24px 24px 0;
+      font-size: 20px;
+      font-weight: 600;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .board-card {
+      background: #fff;
+      border: 1px solid #e1e4e8;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .board-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .board-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1a1a2e;
+    }
+    .board-card-info {
+      font-size: 12px;
+      color: #656d76;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .create-board-card {
+      background: #fff;
+      border: 2px dashed #d0d7de;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      transition: border-color 0.15s, background 0.15s;
+      color: #656d76;
+    }
+    .create-board-card:hover {
+      border-color: #0969da;
+      background: #f6f8fa;
+      color: #0969da;
+    }
+    .create-board-card .plus-icon {
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .create-board-card .plus-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Create Board Form (modal) */
+    .create-board-form { display: flex; flex-direction: column; gap: 12px; }
+    .create-board-form label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+    .create-board-form input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .create-board-form input:focus { outline: none; border-color: #0969da; }
+    .create-board-form .form-hint {
+      font-size: 11px;
+      color: #8b949e;
+      margin-top: -8px;
+    }
+    .create-board-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+    /* Back link */
+    .back-link {
+      background: none;
+      border: none;
+      color: #0969da;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .back-link:hover { background: #ddf4ff; }
+
+    /* Board dropdown (quick switch) */
+    .board-dropdown {
+      padding: 4px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* Markdown rendered content */
+    .md-content h1, .md-content h2, .md-content h3 { margin: 12px 0 6px; }
+    .md-content h1 { font-size: 1.4em; } .md-content h2 { font-size: 1.2em; } .md-content h3 { font-size: 1.1em; }
+    .md-content p { margin: 6px 0; line-height: 1.6; }
+    .md-content code { background: #f0f2f5; padding: 2px 5px; border-radius: 3px; font-size: 13px; }
+    .md-content pre { background: #f0f2f5; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    .md-content pre code { background: none; padding: 0; }
+    .md-content table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+    .md-content th, .md-content td { border: 1px solid #d0d7de; padding: 6px 12px; text-align: left; }
+    .md-content th { background: #f6f8fa; font-weight: 600; }
+    .md-content blockquote { border-left: 3px solid #d0d7de; padding-left: 12px; color: #656d76; margin: 6px 0; }
+    .md-content ul, .md-content ol { padding-left: 20px; margin: 6px 0; }
+    .md-content a { color: #0969da; }
+    .md-content img { max-width: 100%; }
+
+    /* Markdown editor */
+    .md-editor { width: 100%; min-height: 200px; font-family: monospace; padding: 10px; border: 1px solid #d0d7de; border-radius: 6px; font-size: 13px; resize: vertical; }
+    .md-editor:focus { outline: none; border-color: #0969da; }
+    .md-toolbar { display: flex; gap: 6px; margin-top: 8px; }
+
+    /* Edit description button */
+    .btn-edit-desc {
+      background: none;
+      border: 1px solid #d0d7de;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #656d76;
+    }
+    .btn-edit-desc:hover { background: #f6f8fa; color: #1a1a2e; border-color: #8b949e; }
+    .desc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@15/lib/marked.umd.min.js"></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import React, { useState, useEffect, useCallback, createElement, Fragment } from 'react';
+    import { createRoot } from 'react-dom/client';
+
+    const API = '';
+    const h = createElement;
+    const hs = createElement;
+    const F = Fragment;
+
+    // --- Helpers ---
+
+    function timeAgo(dateStr) {
+      const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+      if (seconds < 60) return 'just now';
+      const mins = Math.floor(seconds / 60);
+      if (mins < 60) return mins + ' min ago';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + ' hr ago';
+      const days = Math.floor(hrs / 24);
+      return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+    }
+
+    function eventColor(type) {
+      if (type.includes('Created') || type.includes('Added')) return '#1a7f37';
+      if (type.includes('Moved')) return '#0969da';
+      if (type.includes('Updated') || type.includes('Comment')) return '#9a6700';
+      if (type.includes('Archived') || type.includes('Removed')) return '#cf222e';
+      return '#656d76';
+    }
+
+    function eventDescription(evt) {
+      try {
+        const p = typeof evt.payload === 'string' ? JSON.parse(evt.payload) : evt.payload;
+        if (evt.event_type === 'CardCreated') return 'created card "' + (p.title || '') + '"';
+        if (evt.event_type === 'CardMoved') return 'moved card to ' + (p.to_column || p.toColumn || '');
+        if (evt.event_type === 'CardArchived') return 'archived card "' + (p.title || '') + '"';
+        if (evt.event_type === 'CommentAdded') return 'commented on card';
+        if (evt.event_type === 'LabelAdded') return 'added label "' + (p.label || '') + '"';
+        if (evt.event_type === 'LabelRemoved') return 'removed label "' + (p.label || '') + '"';
+        if (evt.event_type === 'CardUpdated') return 'updated card "' + (p.title || '') + '"';
+        return evt.event_type;
+      } catch { return evt.event_type; }
+    }
+
+    // --- Markdown helpers ---
+
+    function sanitizeHtml(html) {
+      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
+        .replace(/on\w+\s*=\s*'[^']*'/gi, '')
+        .replace(/on\w+\s*=[^\s>]*/gi, '')
+        .replace(/javascript\s*:/gi, '');
+    }
+
+    function renderMarkdown(text) {
+      if (!text) return '';
+      try {
+        const raw = marked.parse(text);
+        return sanitizeHtml(raw);
+      } catch { return text; }
+    }
+
+    function stripMarkdown(text) {
+      if (!text) return '';
+      return text
+        .replace(/#{1,6}\s+/g, '')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        .replace(/_(.+?)_/g, '$1')
+        .replace(/~~(.+?)~~/g, '$1')
+        .replace(/`{1,3}[^`]*`{1,3}/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+        .replace(/^\s*[-*+]\s+/gm, '')
+        .replace(/^\s*\d+\.\s+/gm, '')
+        .replace(/^\s*>\s+/gm, '')
+        .replace(/\|/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function truncate(text, max) {
+      if (!text || text.length <= max) return text;
+      return text.slice(0, max) + '...';
+    }
+
+    async function fetchJson(url) {
+      const r = await fetch(API + url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+
+    async function postJson(url, body) {
+      const r = await fetch(API + url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+
+    async function patchJson(url, body) {
+      const r = await fetch(API + url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+
+    // --- Agent helpers ---
+
+    function roleBadgeClass(roleType) {
+      if (roleType === 'exec') return 'role-badge role-exec';
+      if (roleType === 'lead') return 'role-badge role-lead';
+      return 'role-badge role-ic';
+    }
+
+    function AgentDisplay({ actorId, agents }) {
+      const agent = agents.get(actorId);
+      if (!agent) {
+        return h('span', { className: 'agent-unknown' }, actorId || 'unknown');
+      }
+      return hs(F, {}, [
+        h('span', { className: 'agent-name', key: 'n' }, agent.display_name),
+        h('span', { className: roleBadgeClass(agent.role_type), key: 'r' }, agent.role_type),
+      ]);
+    }
+
+    // --- Components ---
+
+    function LabelBadge({ label, color }) {
+      return h('span', {
+        className: 'label-badge',
+        style: { background: color || '#656d76' }
+      }, label);
+    }
+
+    function CardTile({ card, onClick }) {
+      return hs('div', {
+        className: 'card',
+        onClick: () => onClick(card)
+      }, [
+        h('div', { className: 'card-title', key: 't' }, card.title),
+        card.description ? h('div', { className: 'card-desc', key: 'd' }, truncate(stripMarkdown(card.description), 80)) : null,
+        card.labels && card.labels.length > 0
+          ? hs('div', { className: 'card-labels', key: 'l' },
+              card.labels.map((lb, i) => h(LabelBadge, { ...lb, key: i })))
+          : null,
+      ]);
+    }
+
+    function AddCardForm({ boardId, columnName, actingAgentId }) {
+      const [open, setOpen] = useState(false);
+      const [title, setTitle] = useState('');
+      const [desc, setDesc] = useState('');
+      const [submitting, setSubmitting] = useState(false);
+
+      function handleSubmit() {
+        if (!title.trim() || submitting) return;
+        setSubmitting(true);
+        const cardBody = {
+          title: title.trim(),
+          description: desc.trim() || undefined,
+          column: columnName,
+        };
+        if (actingAgentId) cardBody.actor_id = actingAgentId;
+        postJson('/api/boards/' + boardId + '/cards', cardBody)
+          .then(() => { setTitle(''); setDesc(''); setOpen(false); })
+          .catch(e => alert('Failed to add card: ' + e.message))
+          .finally(() => setSubmitting(false));
+      }
+
+      if (!open) {
+        return h('button', {
+          className: 'add-card-btn',
+          onClick: () => setOpen(true),
+        }, '+ Add Card');
+      }
+
+      return hs('div', { className: 'add-card-form' }, [
+        h('input', {
+          key: 'title',
+          placeholder: 'Card title (required)',
+          value: title,
+          onChange: e => setTitle(e.target.value),
+          autoFocus: true,
+          onKeyDown: e => { if (e.key === 'Enter') handleSubmit(); },
+        }),
+        h('textarea', {
+          key: 'desc',
+          placeholder: 'Description (optional)',
+          value: desc,
+          rows: 2,
+          onChange: e => setDesc(e.target.value),
+        }),
+        hs('div', { className: 'add-card-actions', key: 'actions' }, [
+          h('button', {
+            className: 'btn-add',
+            key: 'add',
+            onClick: handleSubmit,
+            disabled: !title.trim() || submitting,
+          }, submitting ? 'Adding...' : 'Add'),
+          h('button', {
+            className: 'btn-cancel',
+            key: 'cancel',
+            onClick: () => { setOpen(false); setTitle(''); setDesc(''); },
+          }, 'Cancel'),
+        ]),
+      ]);
+    }
+
+    function Column({ name, cards, onCardClick, boardId, actingAgentId }) {
+      return hs('div', { className: 'column' }, [
+        hs('div', { className: 'column-header', key: 'h' }, [
+          h('span', { key: 'n' }, name),
+          h('span', { className: 'column-count', key: 'c' }, String(cards.length)),
+        ]),
+        hs('div', { className: 'column-cards', key: 'cards' },
+          cards.length === 0
+            ? [h('div', { className: 'empty', key: 'e' }, 'No cards')]
+            : cards.map(c => h(CardTile, { card: c, onClick: onCardClick, key: c.id }))
+        ),
+        h(AddCardForm, { boardId, columnName: name, actingAgentId, key: 'add-form' }),
+      ]);
+    }
+
+    function MarkdownEditorWidget({ value, onChange, onSubmit, onCancel, submitLabel, submitting, placeholder, isReply }) {
+      const [tab, setTab] = useState('write');
+      const editorClass = 'comment-editor' + (isReply ? ' reply-editor' : '');
+
+      return hs('div', { className: editorClass }, [
+        hs('div', { className: 'comment-editor-tabs', key: 'tabs' }, [
+          h('button', {
+            className: 'comment-tab' + (tab === 'write' ? ' active' : ''),
+            key: 'write',
+            onClick: () => setTab('write'),
+          }, 'Write'),
+          h('button', {
+            className: 'comment-tab' + (tab === 'preview' ? ' active' : ''),
+            key: 'preview',
+            onClick: () => setTab('preview'),
+          }, 'Preview'),
+        ]),
+        tab === 'write'
+          ? h('textarea', {
+              key: 'textarea',
+              value: value,
+              placeholder: placeholder || 'Write a comment...',
+              onChange: e => onChange(e.target.value),
+              autoFocus: true,
+            })
+          : h('div', {
+              className: 'comment-editor-preview md-content',
+              key: 'preview-content',
+              dangerouslySetInnerHTML: {
+                __html: value.trim() ? renderMarkdown(value) : '<span style="color:#8b949e">Nothing to preview</span>',
+              },
+            }),
+        hs('div', { className: 'comment-editor-footer', key: 'footer' }, [
+          h('span', { className: 'comment-editor-hint', key: 'hint' },
+            'Supports **bold**, *italic*, `code`, tables, lists'),
+          hs('div', { style: { display: 'flex', gap: '6px' }, key: 'btns' }, [
+            onCancel ? h('button', {
+              className: 'btn-cancel',
+              key: 'cancel',
+              onClick: onCancel,
+            }, 'Cancel') : null,
+            h('button', {
+              className: 'btn-post',
+              key: 'submit',
+              onClick: onSubmit,
+              disabled: !value.trim() || submitting,
+            }, submitting ? 'Saving...' : (submitLabel || 'Post')),
+          ]),
+        ]),
+      ]);
+    }
+
+    function CommentItem({ comment, replies, agents, cardId, onCommentAdded, onCommentUpdated, actingAgentId }) {
+      const [showReply, setShowReply] = useState(false);
+      const [replyText, setReplyText] = useState('');
+      const [replyPosting, setReplyPosting] = useState(false);
+      const [editing, setEditing] = useState(false);
+      const [editText, setEditText] = useState('');
+      const [editSaving, setEditSaving] = useState(false);
+      const [currentText, setCurrentText] = useState(comment.text);
+
+      function handleReply() {
+        if (!replyText.trim() || replyPosting) return;
+        setReplyPosting(true);
+        const body = { text: replyText.trim(), parentCommentId: comment.id };
+        if (actingAgentId) body.author_id = actingAgentId;
+        postJson('/api/cards/' + cardId + '/comments', body)
+          .then(newComment => {
+            setReplyText('');
+            setShowReply(false);
+            if (onCommentAdded) onCommentAdded(newComment);
+          })
+          .catch(e => alert('Failed to reply: ' + e.message))
+          .finally(() => setReplyPosting(false));
+      }
+
+      function startEdit() { setEditText(currentText); setEditing(true); }
+      function cancelEdit() { setEditing(false); }
+      function handleEditSave() {
+        if (!editText.trim() || editSaving) return;
+        setEditSaving(true);
+        const body = { text: editText.trim() };
+        if (actingAgentId) body.actorId = actingAgentId;
+        patchJson('/api/comments/' + comment.id, body)
+          .then(updated => {
+            setCurrentText(updated.text);
+            setEditing(false);
+            if (onCommentUpdated) onCommentUpdated(updated);
+          })
+          .catch(e => alert('Failed to save: ' + e.message))
+          .finally(() => setEditSaving(false));
+      }
+
+      return hs('div', { className: 'comment' }, [
+        hs('div', { className: 'comment-header', key: 'h' }, [
+          h('span', { className: 'comment-author', key: 'a' },
+            h(AgentDisplay, { actorId: comment.author_id, agents })),
+          h('span', { className: 'comment-time', key: 't' }, timeAgo(comment.created_at)),
+        ]),
+        editing
+          ? h(MarkdownEditorWidget, {
+              key: 'edit-editor',
+              value: editText,
+              onChange: setEditText,
+              onSubmit: handleEditSave,
+              onCancel: cancelEdit,
+              submitLabel: 'Save',
+              submitting: editSaving,
+              placeholder: 'Edit comment...',
+              isReply: false,
+            })
+          : h('div', { className: 'comment-text md-content', key: 'text',
+              dangerouslySetInnerHTML: { __html: renderMarkdown(currentText) } }),
+        !editing ? hs('div', { className: 'comment-actions', key: 'actions' }, [
+          h('button', { className: 'comment-action', key: 'reply',
+            onClick: () => setShowReply(!showReply) }, 'Reply'),
+          h('button', { className: 'comment-action', key: 'edit',
+            onClick: startEdit }, 'Edit'),
+        ]) : null,
+        showReply && !editing
+          ? h(MarkdownEditorWidget, {
+              key: 'reply-editor',
+              value: replyText,
+              onChange: setReplyText,
+              onSubmit: handleReply,
+              onCancel: () => { setShowReply(false); setReplyText(''); },
+              submitLabel: 'Reply',
+              submitting: replyPosting,
+              placeholder: 'Write a reply...',
+              isReply: true,
+            })
+          : null,
+        replies.length > 0
+          ? hs('div', { className: 'comment-replies', key: 'r' },
+              replies.map(r => h(CommentItem, {
+                comment: r, replies: [], agents, cardId,
+                onCommentAdded, onCommentUpdated, actingAgentId, key: r.id,
+              })))
+          : null,
+      ]);
+    }
+
+    function MoveCardSection({ card, columns, onClose, actingAgentId }) {
+      const [moving, setMoving] = useState(null);
+      const otherCols = columns.filter(c => c !== card.column_name);
+
+      function handleMove(toColumn) {
+        setMoving(toColumn);
+        const moveBody = { toColumn };
+        if (actingAgentId) moveBody.actor_id = actingAgentId;
+        patchJson('/api/cards/' + card.id + '/move', moveBody)
+          .then(() => onClose())
+          .catch(e => { alert('Failed to move: ' + e.message); setMoving(null); });
+      }
+
+      if (otherCols.length === 0) return null;
+
+      return hs('div', { className: 'move-section' }, [
+        h('div', { className: 'modal-section-title', key: 't' }, 'Move to'),
+        hs('div', { className: 'move-pills', key: 'pills' },
+          otherCols.map(col => h('button', {
+            className: 'move-pill',
+            key: col,
+            onClick: () => handleMove(col),
+            disabled: moving !== null,
+          }, moving === col ? 'Moving...' : col))
+        ),
+      ]);
+    }
+
+    function AddCommentForm({ cardId, onAdded, actingAgentId }) {
+      const [text, setText] = useState('');
+      const [posting, setPosting] = useState(false);
+
+      function handlePost() {
+        if (!text.trim() || posting) return;
+        setPosting(true);
+        const body = { text: text.trim() };
+        if (actingAgentId) body.author_id = actingAgentId;
+        postJson('/api/cards/' + cardId + '/comments', body)
+          .then(newComment => { setText(''); if (onAdded) onAdded(newComment); })
+          .catch(e => alert('Failed to post: ' + e.message))
+          .finally(() => setPosting(false));
+      }
+
+      return h(MarkdownEditorWidget, {
+        value: text,
+        onChange: setText,
+        onSubmit: handlePost,
+        onCancel: null,
+        submitLabel: 'Post',
+        submitting: posting,
+        placeholder: 'Write a comment...',
+        isReply: false,
+      });
+    }
+
+    function DescriptionSection({ card, actingAgentId }) {
+      const [editing, setEditing] = useState(false);
+      const [draft, setDraft] = useState('');
+      const [saving, setSaving] = useState(false);
+      const [desc, setDesc] = useState(card.description || '');
+
+      function startEdit() { setDraft(desc); setEditing(true); }
+      function cancelEdit() { setEditing(false); }
+      function saveEdit() {
+        if (saving) return;
+        setSaving(true);
+        const body = { description: draft };
+        if (actingAgentId) body.actorId = actingAgentId;
+        patchJson('/api/cards/' + card.id, body)
+          .then(updated => { setDesc(updated.description || ''); setEditing(false); })
+          .catch(e => alert('Failed to save: ' + e.message))
+          .finally(() => setSaving(false));
+      }
+
+      if (editing) {
+        return hs('div', { className: 'modal-desc' }, [
+          h('textarea', {
+            className: 'md-editor',
+            key: 'editor',
+            value: draft,
+            onChange: e => setDraft(e.target.value),
+            autoFocus: true,
+          }),
+          hs('div', { className: 'md-toolbar', key: 'toolbar' }, [
+            h('button', { className: 'btn-add', key: 'save', onClick: saveEdit, disabled: saving }, saving ? 'Saving...' : 'Save'),
+            h('button', { className: 'btn-cancel', key: 'cancel', onClick: cancelEdit }, 'Cancel'),
+          ]),
+        ]);
+      }
+
+      return hs('div', { className: 'modal-desc' }, [
+        hs('div', { className: 'desc-header', key: 'hdr' }, [
+          h('span', { className: 'modal-section-title', key: 't' }, 'Description'),
+          h('button', { className: 'btn-edit-desc', key: 'edit', onClick: startEdit }, 'Edit'),
+        ]),
+        desc
+          ? h('div', { className: 'md-content', key: 'content', dangerouslySetInnerHTML: { __html: renderMarkdown(desc) } })
+          : h('div', { style: { color: '#8b949e', fontSize: '14px' }, key: 'empty' }, 'No description. Click Edit to add one.'),
+      ]);
+    }
+
+    function CardModal({ card, columns, onClose, agents, actingAgentId }) {
+      const [comments, setComments] = useState([]);
+
+      useEffect(() => {
+        fetchJson('/api/cards/' + card.id + '/comments')
+          .then(setComments).catch(() => {});
+      }, [card.id]);
+
+      const topLevel = comments.filter(c => !c.parent_comment_id);
+      const repliesFor = (id) => comments.filter(c => c.parent_comment_id === id);
+
+      function handleCommentAdded(newComment) {
+        setComments(prev => [...prev, newComment]);
+      }
+
+      function handleCommentUpdated(updated) {
+        setComments(prev => prev.map(c => c.id === updated.id ? updated : c));
+      }
+
+      return h('div', { className: 'modal-overlay', onClick: (e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}, hs('div', { className: 'modal-content' }, [
+        h('button', { className: 'modal-close', onClick: onClose, key: 'x' }, '\u00D7'),
+        h('div', { className: 'modal-title', key: 'title' }, card.title),
+        hs('div', { className: 'modal-meta', key: 'meta' }, [
+          h('span', { key: 'col' }, 'Column: ' + card.column_name + '  '),
+          h('span', { key: 'cr' }, ' Created: ' + timeAgo(card.created_at)),
+          card.updated_at ? h('span', { key: 'up' }, '  Updated: ' + timeAgo(card.updated_at)) : null,
+        ]),
+        card.labels && card.labels.length > 0
+          ? hs('div', { className: 'card-labels', style: { marginBottom: 12 }, key: 'labels' },
+              card.labels.map((lb, i) => h(LabelBadge, { ...lb, key: i })))
+          : null,
+        h(DescriptionSection, { card, actingAgentId, key: 'desc' }),
+        h(MoveCardSection, { card, columns, onClose, actingAgentId, key: 'move' }),
+        h('div', { className: 'modal-section-title', key: 'ct' },
+          'Comments (' + comments.length + ')'),
+        comments.length === 0
+          ? h('div', { className: 'empty', key: 'nc' }, 'No comments yet')
+          : hs('div', { key: 'comments' },
+              topLevel.map(c => h(CommentItem, {
+                comment: c, replies: repliesFor(c.id), agents, cardId: card.id,
+                onCommentAdded: handleCommentAdded, onCommentUpdated: handleCommentUpdated,
+                actingAgentId, key: c.id,
+              }))),
+        h(AddCommentForm, { cardId: card.id, onAdded: handleCommentAdded, actingAgentId, key: 'add-comment' }),
+      ]));
+    }
+
+    function EventRow({ evt, agents }) {
+      return hs('div', { className: 'event-row' }, [
+        h('span', {
+          className: 'event-badge',
+          style: { background: eventColor(evt.event_type) },
+          key: 'b',
+        }, evt.event_type),
+        h('span', { key: 'd' }, eventDescription(evt)),
+        h('span', { className: 'event-actor', key: 'a' },
+          h(AgentDisplay, { actorId: evt.actor_id, agents })),
+        h('span', { className: 'event-time', key: 't' }, timeAgo(evt.occurred_at)),
+      ]);
+    }
+
+    function ActivityLog({ events, agents }) {
+      return hs('div', { className: 'activity-panel' }, [
+        h('div', { className: 'activity-title', key: 't' }, 'Activity Log'),
+        events.length === 0
+          ? h('div', { className: 'empty', key: 'e' }, 'No recent activity')
+          : hs('div', { key: 'list' },
+              events.slice(0, 30).map(e => h(EventRow, { evt: e, agents, key: e.id }))),
+      ]);
+    }
+
+    // --- Hash routing helpers ---
+
+    function parseHash() {
+      const hash = window.location.hash || '#/';
+      const match = hash.match(/^#\/board\/(.+)$/);
+      if (match) return { view: 'board', boardId: match[1] };
+      return { view: 'list', boardId: null };
+    }
+
+    function navigateTo(path) {
+      window.location.hash = path;
+    }
+
+    function useHashRoute() {
+      const [route, setRoute] = useState(parseHash);
+      useEffect(() => {
+        function onHashChange() { setRoute(parseHash()); }
+        window.addEventListener('hashchange', onHashChange);
+        return () => window.removeEventListener('hashchange', onHashChange);
+      }, []);
+      return route;
+    }
+
+    // --- Board List Components ---
+
+    function parseColumns(board) {
+      try {
+        const cols = JSON.parse(board.columns);
+        return Array.isArray(cols) ? cols : [];
+      } catch { return []; }
+    }
+
+    function BoardCard({ board, onClick }) {
+      const cols = parseColumns(board);
+      return hs('div', {
+        className: 'board-card',
+        onClick: () => onClick(board),
+      }, [
+        h('div', { className: 'board-card-name', key: 'name' }, board.name),
+        hs('div', { className: 'board-card-info', key: 'info' }, [
+          h('span', { key: 'cols' }, cols.length + ' column' + (cols.length !== 1 ? 's' : '') + ': ' + cols.join(', ')),
+          board.created_by ? h('span', { key: 'by' }, 'Created by: ' + board.created_by) : null,
+          board.created_at ? h('span', { key: 'date' }, 'Created: ' + timeAgo(board.created_at)) : null,
+        ]),
+      ]);
+    }
+
+    function CreateBoardCard({ onClick }) {
+      return hs('div', {
+        className: 'create-board-card',
+        onClick: onClick,
+      }, [
+        h('div', { className: 'plus-icon', key: 'icon' }, '+'),
+        h('div', { className: 'plus-label', key: 'label' }, 'Create Board'),
+      ]);
+    }
+
+    function CreateBoardModal({ onClose, onCreated, actingAgentId }) {
+      const [name, setName] = useState('');
+      const [columnsStr, setColumnsStr] = useState('todo, doing, done');
+      const [submitting, setSubmitting] = useState(false);
+
+      function handleSubmit() {
+        if (!name.trim() || submitting) return;
+        setSubmitting(true);
+        const cols = columnsStr.split(',').map(s => s.trim()).filter(Boolean);
+        const body = { name: name.trim(), columns: cols };
+        if (actingAgentId) body.actorId = actingAgentId;
+        postJson('/api/boards', body)
+          .then(newBoard => { onCreated(newBoard); })
+          .catch(e => { alert('Failed to create board: ' + e.message); setSubmitting(false); });
+      }
+
+      return h('div', { className: 'modal-overlay', onClick: e => {
+        if (e.target === e.currentTarget) onClose();
+      }}, hs('div', { className: 'modal-content' }, [
+        h('button', { className: 'modal-close', onClick: onClose, key: 'x' }, '\u00D7'),
+        h('div', { className: 'modal-title', key: 'title' }, 'Create New Board'),
+        hs('div', { className: 'create-board-form', key: 'form' }, [
+          h('label', { key: 'nl' }, 'Board Name'),
+          h('input', {
+            key: 'name',
+            placeholder: 'Enter board name',
+            value: name,
+            onChange: e => setName(e.target.value),
+            autoFocus: true,
+            onKeyDown: e => { if (e.key === 'Enter') handleSubmit(); },
+          }),
+          h('label', { key: 'cl' }, 'Columns'),
+          h('input', {
+            key: 'cols',
+            placeholder: 'Comma-separated column names',
+            value: columnsStr,
+            onChange: e => setColumnsStr(e.target.value),
+          }),
+          h('div', { className: 'form-hint', key: 'hint' }, 'Separate column names with commas'),
+          hs('div', { className: 'create-board-actions', key: 'actions' }, [
+            h('button', {
+              className: 'btn-cancel',
+              key: 'cancel',
+              onClick: onClose,
+            }, 'Cancel'),
+            h('button', {
+              className: 'btn-add',
+              key: 'create',
+              onClick: handleSubmit,
+              disabled: !name.trim() || submitting,
+            }, submitting ? 'Creating...' : 'Create'),
+          ]),
+        ]),
+      ]));
+    }
+
+    function BoardListView({ boards, onSelectBoard, onRefresh, actingAgentId }) {
+      const [showCreate, setShowCreate] = useState(false);
+
+      function handleCreated(newBoard) {
+        setShowCreate(false);
+        onRefresh();
+        navigateTo('#/board/' + newBoard.id);
+      }
+
+      return hs(F, {}, [
+        h('div', { className: 'board-list-title', key: 'title' }, 'All Boards'),
+        hs('div', { className: 'board-list', key: 'grid' }, [
+          ...boards.map(b => h(BoardCard, {
+            board: b,
+            onClick: () => navigateTo('#/board/' + b.id),
+            key: b.id,
+          })),
+          h(CreateBoardCard, { onClick: () => setShowCreate(true), key: 'create' }),
+        ]),
+        showCreate
+          ? h(CreateBoardModal, {
+              onClose: () => setShowCreate(false),
+              onCreated: handleCreated,
+              actingAgentId,
+              key: 'create-modal',
+            })
+          : null,
+      ]);
+    }
+
+    function App() {
+      const route = useHashRoute();
+      const [boards, setBoards] = useState([]);
+      const [cards, setCards] = useState([]);
+      const [events, setEvents] = useState([]);
+      const [lastUpdated, setLastUpdated] = useState(null);
+      const [selectedCard, setSelectedCard] = useState(null);
+      const [error, setError] = useState(null);
+      const [agents, setAgents] = useState(new Map());
+      const [actingAgentId, setActingAgentId] = useState('');
+
+      const boardId = route.boardId;
+      const view = route.view;
+
+      useEffect(() => {
+        fetchJson('/api/agents')
+          .then(list => {
+            const map = new Map();
+            list.forEach(a => map.set(a.id, a));
+            setAgents(map);
+          })
+          .catch(() => {});
+      }, []);
+
+      const loadBoards = useCallback(async () => {
+        try {
+          const boardList = await fetchJson('/api/boards');
+          setBoards(boardList);
+          setError(null);
+        } catch (e) { setError(e.message); }
+      }, []);
+
+      const loadBoardData = useCallback(async () => {
+        if (!boardId) return;
+        try {
+          const [boardList, cardData, eventData] = await Promise.all([
+            fetchJson('/api/boards'),
+            fetchJson('/api/boards/' + boardId + '/cards'),
+            fetchJson('/api/events'),
+          ]);
+          setBoards(boardList);
+          setCards(cardData);
+          setEvents(eventData);
+          setLastUpdated(new Date());
+          setError(null);
+        } catch (e) { setError(e.message); }
+      }, [boardId]);
+
+      // Load data based on current view
+      useEffect(() => {
+        if (view === 'board') { loadBoardData(); }
+        else { loadBoards(); }
+      }, [view, loadBoardData, loadBoards]);
+
+      // Polling: board view = 5s, list view = 10s
+      useEffect(() => {
+        if (view === 'board') {
+          const t = setInterval(loadBoardData, 5000);
+          return () => clearInterval(t);
+        } else {
+          const t = setInterval(loadBoards, 10000);
+          return () => clearInterval(t);
+        }
+      }, [view, loadBoardData, loadBoards]);
+
+      // Clear board-specific state when going to list
+      useEffect(() => {
+        if (view === 'list') {
+          setCards([]);
+          setEvents([]);
+          setSelectedCard(null);
+          setLastUpdated(null);
+        }
+      }, [view]);
+
+      const currentBoard = boards.find(b => b.id === boardId);
+      let columns = [];
+      if (currentBoard && currentBoard.columns) {
+        try { columns = JSON.parse(currentBoard.columns); }
+        catch { columns = currentBoard.columns.split(',').map(s => s.trim()); }
+      }
+      if (view === 'board' && columns.length === 0) {
+        columns = [...new Set(cards.map(c => c.column_name))];
+      }
+
+      const cardsByCol = {};
+      for (const col of columns) {
+        cardsByCol[col] = cards
+          .filter(c => c.column_name === col)
+          .sort((a, b) => a.position - b.position);
+      }
+
+      // --- Header ---
+      const header = hs('div', { className: 'header', key: 'header' }, [
+        hs('div', { className: 'header-left', key: 'l' }, [
+          view === 'board'
+            ? h('button', {
+                className: 'back-link',
+                key: 'back',
+                onClick: () => navigateTo('#/'),
+              }, '\u2190 All Boards')
+            : null,
+          h('h1', { key: 'h' },
+            view === 'board'
+              ? (currentBoard ? currentBoard.name : 'Loading...')
+              : 'Board Viewer'),
+          view === 'board' && boards.length > 1
+            ? h('select', {
+                className: 'board-dropdown',
+                key: 's',
+                value: boardId || '',
+                onChange: e => navigateTo('#/board/' + e.target.value),
+              }, boards.map(b => h('option', { value: b.id, key: b.id }, b.name)))
+            : null,
+        ]),
+        hs('div', { className: 'header-right', key: 'r', style: { display: 'flex', alignItems: 'center', gap: '16px' } }, [
+          agents.size > 0
+            ? hs('div', { className: 'agent-selector', key: 'as' }, [
+                h('span', { key: 'lbl' }, 'Acting as:'),
+                h('select', {
+                  key: 'sel',
+                  value: actingAgentId,
+                  onChange: e => setActingAgentId(e.target.value),
+                }, [
+                  h('option', { value: '', key: 'default' }, 'web-user (default)'),
+                  ...Array.from(agents.values()).map(a =>
+                    h('option', { value: a.id, key: a.id }, a.display_name + ' (' + a.role_type + ')')
+                  ),
+                ]),
+              ])
+            : null,
+          view === 'board'
+            ? h('span', { key: 'ts' },
+                lastUpdated
+                  ? 'Last updated: ' + lastUpdated.toLocaleTimeString()
+                  : 'Loading...')
+            : null,
+        ]),
+      ]);
+
+      // --- List View ---
+      if (view === 'list') {
+        return hs(F, {}, [
+          header,
+          error ? h('div', { className: 'error', key: 'err' }, 'Error: ' + error) : null,
+          h(BoardListView, {
+            boards,
+            onSelectBoard: (b) => navigateTo('#/board/' + b.id),
+            onRefresh: loadBoards,
+            actingAgentId,
+            key: 'list',
+          }),
+        ]);
+      }
+
+      // --- Board View ---
+      return hs(F, {}, [
+        header,
+
+        error
+          ? h('div', { className: 'error', key: 'err' }, 'Error: ' + error)
+          : null,
+
+        hs('div', { className: 'board-container', key: 'board' }, [
+          hs('div', { className: 'columns', key: 'cols' },
+            columns.map(col => h(Column, {
+              name: col,
+              cards: cardsByCol[col] || [],
+              onCardClick: setSelectedCard,
+              boardId: boardId,
+              actingAgentId,
+              key: col,
+            }))),
+        ]),
+
+        h(ActivityLog, { events, agents, key: 'activity' }),
+
+        selectedCard
+          ? h(CardModal, {
+              card: selectedCard,
+              columns: columns,
+              onClose: () => setSelectedCard(null),
+              agents,
+              actingAgentId,
+              key: 'modal',
+            })
+          : null,
+      ]);
+    }
+
+    createRoot(document.getElementById('root')).render(h(App, {}));
+  </script>
+</body>
+</html>
