@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from './db.js';
 import { writeAudit } from './audit-writer.js';
 import { appendEvent, getMaxPosition, type BoardRow, type CardRow } from './write-helpers.js';
+import { canAccessBoard } from './board-access.js';
 
 export const cardWriteRouter = Router();
 
@@ -14,9 +15,13 @@ cardWriteRouter.post('/api/boards/:boardId/cards', (req: Request, res: Response)
   const board = db.prepare('SELECT id, columns, name FROM boards WHERE id = ?').get(boardId) as (BoardRow & { name?: string }) | undefined;
   if (!board) { res.status(404).json({ error: 'Board not found' }); return; }
 
+  const actor = actorId ?? 'web-user';
+  if (!canAccessBoard(db, boardId, actor)) {
+    res.status(403).json({ error: 'Access denied: board is private' }); return;
+  }
+
   const columns: string[] = JSON.parse(board.columns);
   const column = req.body.column ?? columns[0] ?? 'todo';
-  const actor = actorId ?? 'web-user';
   const id = randomUUID();
   const now = new Date().toISOString();
   const position = getMaxPosition(boardId, column);
@@ -45,6 +50,9 @@ cardWriteRouter.patch('/api/cards/:id/move', (req: Request, res: Response) => {
   if (!card) { res.status(404).json({ error: 'Card not found' }); return; }
 
   const actor = actorId ?? 'web-user';
+  if (!canAccessBoard(db, card.board_id, actor)) {
+    res.status(403).json({ error: 'Access denied: board is private' }); return;
+  }
   const now = new Date().toISOString();
   const position = getMaxPosition(card.board_id, toColumn);
 
@@ -74,6 +82,9 @@ cardWriteRouter.patch('/api/cards/:id', (req: Request, res: Response) => {
   }
 
   const actor = actorId ?? 'web-user';
+  if (!canAccessBoard(db, card.board_id, actor)) {
+    res.status(403).json({ error: 'Access denied: board is private' }); return;
+  }
   const now = new Date().toISOString();
   const newTitle = title ?? card.title;
   const newDesc = description ?? card.description;

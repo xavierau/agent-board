@@ -4,6 +4,7 @@ import type { LabelReadModel } from '../../domain/repositories/label-read-model.
 export class SqliteLabelReadModel implements LabelReadModel {
   private readonly upsertStmt: Database.Statement;
   private readonly removeStmt: Database.Statement;
+  private readonly removeAllStmt: Database.Statement;
   private readonly byCardStmt: Database.Statement;
 
   constructor(db: Database.Database) {
@@ -13,6 +14,9 @@ export class SqliteLabelReadModel implements LabelReadModel {
     );
     this.removeStmt = db.prepare(
       'DELETE FROM card_labels WHERE card_id = ? AND label = ?',
+    );
+    this.removeAllStmt = db.prepare(
+      'DELETE FROM card_labels WHERE label = ?',
     );
     this.byCardStmt = db.prepare(
       'SELECT label, color FROM card_labels WHERE card_id = ? ORDER BY label',
@@ -30,6 +34,10 @@ export class SqliteLabelReadModel implements LabelReadModel {
 
   removeLabel(cardId: string, label: string): void {
     this.removeStmt.run(cardId, label);
+  }
+
+  removeLabelFromAllCards(label: string): void {
+    this.removeAllStmt.run(label);
   }
 
   findByCard(cardId: string): Array<{ label: string; color: string }> {

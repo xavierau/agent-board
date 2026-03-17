@@ -7,7 +7,34 @@ export const createBoardSchema = z.object({
   actorId: z.string().min(1),
 });
 
-export const listBoardsSchema = z.object({});
+export const listBoardsSchema = z.object({
+  actorId: z.string().min(1).optional(),
+});
+
+// Board access tools
+export const setBoardVisibilitySchema = z.object({
+  boardId: z.string().uuid(),
+  visibility: z.enum(['public', 'private']),
+  actorId: z.string().min(1),
+});
+
+export const transferBoardOwnershipSchema = z.object({
+  boardId: z.string().uuid(),
+  newOwnerId: z.string().min(1),
+  actorId: z.string().min(1),
+});
+
+export const addBoardMemberSchema = z.object({
+  boardId: z.string().uuid(),
+  memberId: z.string().min(1),
+  actorId: z.string().min(1),
+});
+
+export const removeBoardMemberSchema = z.object({
+  boardId: z.string().uuid(),
+  memberId: z.string().min(1),
+  actorId: z.string().min(1),
+});
 
 // Card tools
 export const createCardSchema = z.object({
@@ -60,6 +87,30 @@ export const removeLabelSchema = z.object({
   cardId: z.string().uuid(),
   label: z.string().min(1).max(50),
   actorId: z.string().min(1),
+});
+
+// Board label tools
+export const createBoardLabelSchema = z.object({
+  boardId: z.string().uuid(),
+  name: z.string().min(1).max(50),
+  color: z.string().min(1).max(20).default('#888888'),
+  actorId: z.string().min(1),
+});
+
+export const updateBoardLabelSchema = z.object({
+  labelId: z.string().uuid(),
+  name: z.string().min(1).max(50),
+  color: z.string().min(1).max(20),
+  actorId: z.string().min(1),
+});
+
+export const removeBoardLabelSchema = z.object({
+  labelId: z.string().uuid(),
+  actorId: z.string().min(1),
+});
+
+export const listBoardLabelsSchema = z.object({
+  boardId: z.string().uuid(),
 });
 
 // Agent tools

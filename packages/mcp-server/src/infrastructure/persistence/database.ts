@@ -1,80 +1,45 @@
 import Database from 'better-sqlite3';
-
-const CREATE_EVENTS_TABLE = `
-CREATE TABLE IF NOT EXISTS events (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  stream_id TEXT NOT NULL,
-  event_type TEXT NOT NULL,
-  payload TEXT NOT NULL,
-  version INTEGER NOT NULL,
-  actor_id TEXT NOT NULL DEFAULT '',
-  occurred_at TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE(stream_id, version)
-)`;
-
-const CREATE_EVENTS_INDEX =
-  'CREATE INDEX IF NOT EXISTS idx_events_stream ON events(stream_id, version)';
-
-const CREATE_CARDS_TABLE = `
-CREATE TABLE IF NOT EXISTS cards (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  column_name TEXT NOT NULL DEFAULT 'todo',
-  position INTEGER NOT NULL DEFAULT 0,
-  board_id TEXT NOT NULL DEFAULT '',
-  archived INTEGER NOT NULL DEFAULT 0,
-  assignee TEXT DEFAULT NULL,
-  labels TEXT NOT NULL DEFAULT '[]',
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-)`;
-
-const CREATE_CARDS_INDEX =
-  'CREATE INDEX IF NOT EXISTS idx_cards_column ON cards(column_name, position)';
-
-const CREATE_BOARDS_TABLE = `
-CREATE TABLE IF NOT EXISTS boards (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  columns TEXT NOT NULL DEFAULT '["todo","doing","done"]',
-  created_by TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-)`;
-
-const CREATE_CARD_LABELS_TABLE = `
-CREATE TABLE IF NOT EXISTS card_labels (
-  card_id TEXT NOT NULL,
-  label TEXT NOT NULL,
-  color TEXT NOT NULL DEFAULT '#888888',
-  added_at TEXT NOT NULL,
-  PRIMARY KEY (card_id, label)
-)`;
-
-const CREATE_COMMENTS_TABLE = `
-CREATE TABLE IF NOT EXISTS comments (
-  id TEXT PRIMARY KEY,
-  card_id TEXT NOT NULL,
-  parent_comment_id TEXT,
-  author_id TEXT NOT NULL,
-  text TEXT NOT NULL,
-  created_at TEXT NOT NULL
-)`;
-
-const CREATE_COMMENTS_INDEX =
-  'CREATE INDEX IF NOT EXISTS idx_comments_card ON comments(card_id)';
+import { TABLES, INDEXES } from './schema.js';
 
 export function createDatabase(dbPath?: string): Database.Database {
   const db = new Database(dbPath ?? ':memory:');
   db.pragma('journal_mode = WAL');
-  db.exec(CREATE_EVENTS_TABLE);
-  db.exec(CREATE_EVENTS_INDEX);
-  db.exec(CREATE_CARDS_TABLE);
-  db.exec(CREATE_CARDS_INDEX);
-  db.exec(CREATE_BOARDS_TABLE);
-  db.exec(CREATE_CARD_LABELS_TABLE);
-  db.exec(CREATE_COMMENTS_TABLE);
-  db.exec(CREATE_COMMENTS_INDEX);
+  for (const table of TABLES) db.exec(table);
+  for (const index of INDEXES) db.exec(index);
+  migrateBoards(db);
+  migrateBoardLabels(db);
   return db;
+}
+
+function migrateBoards(db: Database.Database): void {
+  safeAlterTable(db, 'ALTER TABLE boards ADD COLUMN owner TEXT NOT NULL DEFAULT \'\'');
+  safeAlterTable(db, 'ALTER TABLE boards ADD COLUMN visibility TEXT NOT NULL DEFAULT \'public\'');
+  db.exec("UPDATE boards SET owner = created_by WHERE owner = ''");
+}
+
+function migrateBoardLabels(db: Database.Database): void {
+  db.exec(`
+    INSERT OR IGNORE INTO board_labels (id, board_id, name, color, created_at)
+    SELECT
+      lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' ||
+        substr(hex(randomblob(2)),2) || '-' ||
+        substr('89ab',abs(random()) % 4 + 1, 1) ||
+        substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))),
+      c.board_id, cl.label, cl.color, cl.added_at
+    FROM card_labels cl
+    JOIN cards c ON cl.card_id = c.id
+    WHERE NOT EXISTS (
+      SELECT 1 FROM board_labels bl
+      WHERE bl.board_id = c.board_id AND bl.name = cl.label
+    )
+    GROUP BY c.board_id, cl.label
+  `);
+}
+
+function safeAlterTable(db: Database.Database, sql: string): void {
+  try {
+    db.exec(sql);
+  } catch {
+    // Column already exists — safe to ignore
+  }
 }

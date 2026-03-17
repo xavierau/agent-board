@@ -5,6 +5,10 @@ import { registerCardTools } from './card-tools.js';
 import { registerLabelTools } from './label-tools.js';
 import { registerCommentTools } from './comment-tools.js';
 import { registerAgentTools } from './agent-tools.js';
+import { registerBoardAccessTools } from './board-access-tools.js';
+import { registerBoardLabelTools } from './board-label-tools.js';
+import { registerChecklistTools } from './checklist-tools.js';
+import { registerChecklistItemTools } from './checklist-item-tools.js';
 
 export type { McpDeps, UseCases } from './types.js';
 
@@ -19,6 +23,10 @@ export function createMcpServer(deps: McpDeps): McpServer {
   registerLabelTools(server, deps);
   registerCommentTools(server, deps);
   registerAgentTools(server, deps);
+  registerBoardAccessTools(server, deps);
+  registerBoardLabelTools(server, deps);
+  registerChecklistTools(server, deps);
+  registerChecklistItemTools(server, deps);
 
   return server;
 }

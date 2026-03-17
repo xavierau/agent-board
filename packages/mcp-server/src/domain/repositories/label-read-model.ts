@@ -6,5 +6,6 @@ export interface LabelReadModel {
     addedAt: string,
   ): void;
   removeLabel(cardId: string, label: string): void;
+  removeLabelFromAllCards(label: string): void;
   findByCard(cardId: string): Array<{ label: string; color: string }>;
 }

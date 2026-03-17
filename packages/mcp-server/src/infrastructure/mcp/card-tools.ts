@@ -8,7 +8,10 @@ import {
   listCardsSchema,
   assignCardSchema,
 } from './tool-schemas.js';
-import { jsonResult, validateActor, getActorInfo } from './tool-helpers.js';
+import {
+  jsonResult, validateActor, getActorInfo,
+  checkBoardAccess, checkCardBoardAccess,
+} from './tool-helpers.js';
 
 export function registerCardTools(
   server: McpServer,
@@ -32,6 +35,8 @@ function registerCreateCard(
   }, async (input) => {
     const err = validateActor(deps.actorValidator, input.actorId);
     if (err) return err;
+    const access = checkBoardAccess(deps.boardReadModel, input.boardId, input.actorId);
+    if (access) return access;
     const result = deps.useCases.createCard.execute(input);
     const actor = getActorInfo(deps.agentRegistry, input.actorId);
     return jsonResult({ ...result, actor });
@@ -48,6 +53,8 @@ function registerMoveCard(
   }, async (input) => {
     const err = validateActor(deps.actorValidator, input.actorId);
     if (err) return err;
+    const access = checkCardBoardAccess(deps.cardReadModel, deps.boardReadModel, input.cardId, input.actorId);
+    if (access) return access;
     const result = deps.useCases.moveCard.execute(input);
     const actor = getActorInfo(deps.agentRegistry, input.actorId);
     return jsonResult({ ...result, actor });
@@ -64,6 +71,8 @@ function registerUpdateCard(
   }, async (input) => {
     const err = validateActor(deps.actorValidator, input.actorId);
     if (err) return err;
+    const access = checkCardBoardAccess(deps.cardReadModel, deps.boardReadModel, input.cardId, input.actorId);
+    if (access) return access;
     const result = deps.useCases.updateCard.execute(input);
     const actor = getActorInfo(deps.agentRegistry, input.actorId);
     return jsonResult({ ...result, actor });
@@ -80,6 +89,8 @@ function registerArchiveCard(
   }, async (input) => {
     const err = validateActor(deps.actorValidator, input.actorId);
     if (err) return err;
+    const access = checkCardBoardAccess(deps.cardReadModel, deps.boardReadModel, input.cardId, input.actorId);
+    if (access) return access;
     const result = deps.useCases.archiveCard.execute(input);
     const actor = getActorInfo(deps.agentRegistry, input.actorId);
     return jsonResult({ ...result, actor });
@@ -108,6 +119,8 @@ function registerAssignCard(
   }, async (input) => {
     const err = validateActor(deps.actorValidator, input.actorId);
     if (err) return err;
+    const access = checkCardBoardAccess(deps.cardReadModel, deps.boardReadModel, input.cardId, input.actorId);
+    if (access) return access;
     const result = deps.useCases.assignCard.execute(input);
     const actor = getActorInfo(deps.agentRegistry, input.actorId);
     return jsonResult({ ...result, actor });

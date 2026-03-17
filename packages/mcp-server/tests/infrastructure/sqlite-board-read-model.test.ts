@@ -13,6 +13,9 @@ describe('SqliteBoardReadModel', () => {
     name: 'Sprint Board',
     columns: ['todo', 'doing', 'done'],
     createdBy: 'user-1',
+    owner: 'user-1',
+    visibility: 'public',
+    members: [],
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };
@@ -44,16 +47,46 @@ describe('SqliteBoardReadModel', () => {
   it('upsert updates existing board', () => {
     model.upsert(board);
     model.upsert({ ...board, name: 'Renamed' });
-
-    const found = model.findById('board-1');
-    expect(found?.name).toBe('Renamed');
+    expect(model.findById('board-1')?.name).toBe('Renamed');
   });
 
   it('stores and retrieves columns as JSON', () => {
     const custom = { ...board, columns: ['backlog', 'in-progress', 'review', 'done'] };
     model.upsert(custom);
+    expect(model.findById('board-1')?.columns).toEqual(['backlog', 'in-progress', 'review', 'done']);
+  });
 
+  it('updateOwner changes the board owner', () => {
+    model.upsert(board);
+    model.updateOwner('board-1', 'user-2');
+    expect(model.findById('board-1')?.owner).toBe('user-2');
+  });
+
+  it('updateVisibility changes the board visibility', () => {
+    model.upsert(board);
+    model.updateVisibility('board-1', 'private');
+    expect(model.findById('board-1')?.visibility).toBe('private');
+  });
+
+  it('addMember adds a member to the board', () => {
+    model.upsert(board);
+    model.addMember('board-1', 'agent-1');
     const found = model.findById('board-1');
-    expect(found?.columns).toEqual(['backlog', 'in-progress', 'review', 'done']);
+    expect(found?.members).toEqual(['agent-1']);
+  });
+
+  it('removeMember removes a member from the board', () => {
+    model.upsert(board);
+    model.addMember('board-1', 'agent-1');
+    model.addMember('board-1', 'agent-2');
+    model.removeMember('board-1', 'agent-1');
+    expect(model.findById('board-1')?.members).toEqual(['agent-2']);
+  });
+
+  it('addMember is idempotent', () => {
+    model.upsert(board);
+    model.addMember('board-1', 'agent-1');
+    model.addMember('board-1', 'agent-1');
+    expect(model.findById('board-1')?.members).toEqual(['agent-1']);
   });
 });

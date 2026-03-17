@@ -10,8 +10,25 @@ import type { RemoveLabelUseCase } from '../../application/use-cases/remove-labe
 import type { AddCommentUseCase } from '../../application/use-cases/add-comment.js';
 import type { ListCommentsUseCase } from '../../application/use-cases/list-comments.js';
 import type { AssignCardUseCase } from '../../application/use-cases/assign-card.js';
+import type { SetBoardVisibilityUseCase } from '../../application/use-cases/set-board-visibility.js';
+import type { TransferBoardOwnershipUseCase } from '../../application/use-cases/transfer-board-ownership.js';
+import type { AddBoardMemberUseCase } from '../../application/use-cases/add-board-member.js';
+import type { RemoveBoardMemberUseCase } from '../../application/use-cases/remove-board-member.js';
+import type { CreateBoardLabelUseCase } from '../../application/use-cases/create-board-label.js';
+import type { UpdateBoardLabelUseCase } from '../../application/use-cases/update-board-label.js';
+import type { RemoveBoardLabelUseCase } from '../../application/use-cases/remove-board-label.js';
+import type { ListBoardLabelsUseCase } from '../../application/use-cases/list-board-labels.js';
+import type { CreateChecklistUseCase } from '../../application/use-cases/create-checklist.js';
+import type { RemoveChecklistUseCase } from '../../application/use-cases/remove-checklist.js';
+import type { AddChecklistItemUseCase } from '../../application/use-cases/add-checklist-item.js';
+import type { ToggleChecklistItemUseCase } from '../../application/use-cases/toggle-checklist-item.js';
+import type { UpdateChecklistItemUseCase } from '../../application/use-cases/update-checklist-item.js';
+import type { RemoveChecklistItemUseCase } from '../../application/use-cases/remove-checklist-item.js';
+import type { ListChecklistsUseCase } from '../../application/use-cases/list-checklists.js';
 import type { ActorValidator } from '../validation/actor-validator.js';
 import type { AgentRegistry } from '../../domain/repositories/agent-registry.js';
+import type { BoardReadModel } from '../../domain/repositories/board-read-model.js';
+import type { CardReadModel } from '../../domain/repositories/card-read-model.js';
 
 export type UseCases = {
   readonly createBoard: CreateBoardUseCase;
@@ -26,10 +43,27 @@ export type UseCases = {
   readonly addComment: AddCommentUseCase;
   readonly listComments: ListCommentsUseCase;
   readonly assignCard: AssignCardUseCase;
+  readonly setBoardVisibility: SetBoardVisibilityUseCase;
+  readonly transferBoardOwnership: TransferBoardOwnershipUseCase;
+  readonly addBoardMember: AddBoardMemberUseCase;
+  readonly removeBoardMember: RemoveBoardMemberUseCase;
+  readonly createBoardLabel: CreateBoardLabelUseCase;
+  readonly updateBoardLabel: UpdateBoardLabelUseCase;
+  readonly removeBoardLabel: RemoveBoardLabelUseCase;
+  readonly listBoardLabels: ListBoardLabelsUseCase;
+  readonly createChecklist: CreateChecklistUseCase;
+  readonly removeChecklist: RemoveChecklistUseCase;
+  readonly addChecklistItem: AddChecklistItemUseCase;
+  readonly toggleChecklistItem: ToggleChecklistItemUseCase;
+  readonly updateChecklistItem: UpdateChecklistItemUseCase;
+  readonly removeChecklistItem: RemoveChecklistItemUseCase;
+  readonly listChecklists: ListChecklistsUseCase;
 };
 
 export type McpDeps = {
   readonly useCases: UseCases;
   readonly actorValidator: ActorValidator;
   readonly agentRegistry: AgentRegistry;
+  readonly boardReadModel: BoardReadModel;
+  readonly cardReadModel: CardReadModel;
 };

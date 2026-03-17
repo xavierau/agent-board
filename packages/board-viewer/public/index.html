@@ -549,6 +549,289 @@
 
     /* Mention editor wrapper */
     .mention-editor-wrap { position: relative; overflow: visible; }
+
+    /* Board visibility */
+    .visibility-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    .visibility-public {
+      background: #ddf4ff;
+      color: #0969da;
+    }
+    .visibility-private {
+      background: #fff1e5;
+      color: #bc4c00;
+    }
+
+    /* Board settings panel */
+    .board-settings-btn {
+      background: none;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #656d76;
+    }
+    .board-settings-btn:hover { background: #f6f8fa; color: #1a1a2e; }
+
+    .settings-section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    .settings-section:last-child { border-bottom: none; }
+    .settings-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .member-list { margin-top: 8px; }
+    .member-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f2f5;
+      font-size: 13px;
+    }
+    .btn-remove-member {
+      background: none;
+      border: none;
+      color: #cf222e;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+    .btn-remove-member:hover { text-decoration: underline; }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #d0d7de;
+      border-radius: 22px;
+      transition: background 0.2s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: #0969da; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    .owner-badge {
+      font-size: 11px;
+      color: #656d76;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Label management */
+    .label-manager { margin-top: 8px; }
+    .label-registry-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .label-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .label-name { font-size: 13px; flex: 1; }
+    .label-actions { display: flex; gap: 4px; }
+    .btn-label-action {
+      background: none;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      color: #656d76;
+      padding: 2px 4px;
+    }
+    .btn-label-action:hover { color: #0969da; }
+    .btn-label-action.danger:hover { color: #cf222e; }
+
+    .label-form-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .label-form-row input[type="text"] {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .label-form-row input[type="color"] {
+      width: 32px;
+      height: 28px;
+      border: 1px solid #d0d7de;
+      border-radius: 4px;
+      padding: 1px;
+      cursor: pointer;
+    }
+
+    /* Card label picker */
+    .label-picker { margin-bottom: 16px; }
+    .label-picker-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .label-picker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      color: #fff;
+      font-weight: 500;
+      transition: border-color 0.15s, opacity 0.15s;
+    }
+    .label-picker-item:hover { opacity: 0.85; }
+    .label-picker-item.selected { border-color: #1a1a2e; }
+    .label-picker-item.unselected { opacity: 0.5; }
+
+    /* Checklists */
+    .checklist-section { margin-bottom: 16px; }
+    .checklist-block { margin-bottom: 12px; }
+    .checklist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .checklist-title { font-size: 14px; font-weight: 600; }
+    .checklist-progress {
+      font-size: 11px;
+      color: #656d76;
+    }
+    .progress-bar {
+      height: 6px;
+      background: #e1e4e8;
+      border-radius: 3px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1a7f37;
+      border-radius: 3px;
+      transition: width 0.2s;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-top: 3px;
+      cursor: pointer;
+    }
+    .checklist-item-text {
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .checklist-item-text.completed {
+      text-decoration: line-through;
+      color: #8b949e;
+    }
+    .checklist-item-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .checklist-item:hover .checklist-item-actions { opacity: 1; }
+
+    .btn-checklist-action {
+      background: none;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      color: #656d76;
+      padding: 2px 4px;
+    }
+    .btn-checklist-action:hover { color: #0969da; }
+    .btn-checklist-action.danger:hover { color: #cf222e; }
+
+    .add-item-form {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .add-item-form input {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .add-checklist-form {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .add-checklist-form input {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .btn-delete-checklist {
+      background: none;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      color: #cf222e;
+      padding: 2px 6px;
+    }
+    .btn-delete-checklist:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -592,6 +875,7 @@
       if (type.includes('moved') || type.includes('Moved')) return '#0969da';
       if (type.includes('updated') || type.includes('Updated') || type.includes('comment') || type.includes('Comment') || type.includes('renamed')) return '#9a6700';
       if (type.includes('assigned')) return '#8250df';
+      if (type.includes('visibility') || type.includes('ownership') || type.includes('member')) return '#8250df';
       if (type.includes('Archived') || type.includes('Removed')) return '#cf222e';
       return '#656d76';
     }
@@ -617,6 +901,19 @@
         if (evt.action === 'comment.updated') return 'edited comment on "' + target + '"';
         if (evt.action === 'board.created') return 'created board "' + target + '"';
         if (evt.action === 'board.renamed') return 'renamed board to "' + (d.name?.to || target) + '"';
+        if (evt.action === 'board.visibility_changed') return 'changed board visibility to ' + (d.visibility?.to || '?');
+        if (evt.action === 'board.ownership_transferred') return 'transferred board ownership to ' + (d.owner?.to || '?');
+        if (evt.action === 'board.member_added') return 'added member ' + (d.member?.to || '?') + ' to board';
+        if (evt.action === 'board.member_removed') return 'removed member ' + (d.member?.from || '?') + ' from board';
+        if (evt.action === 'board.label_created') return 'created label "' + (d.name?.to || evt.targetTitle || '') + '"';
+        if (evt.action === 'board.label_updated') return 'updated label "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'board.label_removed') return 'removed label "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'checklist.created') return 'added checklist "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'checklist.removed') return 'removed checklist from "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'checklist.item_added') return 'added checklist item on "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'checklist.item_toggled') return (d.completed?.to ? 'completed' : 'uncompleted') + ' checklist item on "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'checklist.item_updated') return 'updated checklist item on "' + (evt.targetTitle || '') + '"';
+        if (evt.action === 'checklist.item_removed') return 'removed checklist item from "' + (evt.targetTitle || '') + '"';
         return evt.action;
       }
       // Legacy SQLite events format fallback
@@ -729,6 +1026,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+
+    async function deleteJson(url) {
+      const r = await fetch(API + url, { method: 'DELETE' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }
@@ -1273,7 +1576,252 @@
       ]);
     }
 
-    function CardModal({ card, columns, onClose, agents, actingAgentId }) {
+    function CardLabelPicker({ card, boardId, actingAgentId, onLabelsChanged }) {
+      const [boardLabels, setBoardLabels] = useState([]);
+      const [saving, setSaving] = useState(null);
+      const [cardLabels, setCardLabels] = useState(card.labels || []);
+
+      const actor = actingAgentId || 'web-user';
+
+      useEffect(() => {
+        fetchJson('/api/boards/' + boardId + '/labels').then(setBoardLabels).catch(() => {});
+      }, [boardId]);
+
+      const cardLabelNames = new Set(cardLabels.map(l => l.label));
+
+      function toggleLabel(boardLabel) {
+        const isOn = cardLabelNames.has(boardLabel.name);
+        setSaving(boardLabel.id);
+        if (isOn) {
+          deleteJson('/api/cards/' + card.id + '/labels/' + encodeURIComponent(boardLabel.name) + '?actorId=' + encodeURIComponent(actor))
+            .then(() => {
+              const updated = cardLabels.filter(l => l.label !== boardLabel.name);
+              setCardLabels(updated);
+              if (onLabelsChanged) onLabelsChanged(updated);
+            })
+            .catch(e => alert('Failed: ' + e.message))
+            .finally(() => setSaving(null));
+        } else {
+          postJson('/api/cards/' + card.id + '/labels', { labelId: boardLabel.id, actorId: actor })
+            .then(() => {
+              const updated = [...cardLabels, { label: boardLabel.name, color: boardLabel.color }];
+              setCardLabels(updated);
+              if (onLabelsChanged) onLabelsChanged(updated);
+            })
+            .catch(e => alert('Failed: ' + e.message))
+            .finally(() => setSaving(null));
+        }
+      }
+
+      if (boardLabels.length === 0) return null;
+
+      return hs('div', { className: 'label-picker' }, [
+        h('div', { className: 'modal-section-title', key: 't' }, 'Labels'),
+        hs('div', { className: 'label-picker-list', key: 'list' },
+          boardLabels.map(bl => {
+            const isOn = cardLabelNames.has(bl.name);
+            return h('span', {
+              className: 'label-picker-item' + (isOn ? ' selected' : ' unselected'),
+              style: { background: bl.color },
+              onClick: () => saving === null && toggleLabel(bl),
+              key: bl.id,
+              title: isOn ? 'Click to remove' : 'Click to add',
+            }, (saving === bl.id ? '...' : '') + bl.name);
+          })
+        ),
+      ]);
+    }
+
+    function ChecklistItemRow({ item, actingAgentId, onToggle, onUpdate, onRemove }) {
+      const [editing, setEditing] = useState(false);
+      const [editText, setEditText] = useState(item.text);
+      const actor = actingAgentId || 'web-user';
+
+      function handleToggle() {
+        patchJson('/api/checklist-items/' + item.id, { completed: !item.completed, actorId: actor })
+          .then(updated => onToggle(updated))
+          .catch(e => alert('Failed: ' + e.message));
+      }
+
+      function handleSave() {
+        if (!editText.trim()) return;
+        patchJson('/api/checklist-items/' + item.id, { text: editText.trim(), actorId: actor })
+          .then(updated => { onUpdate(updated); setEditing(false); })
+          .catch(e => alert('Failed: ' + e.message));
+      }
+
+      function handleRemove() {
+        deleteJson('/api/checklist-items/' + item.id + '?actorId=' + encodeURIComponent(actor))
+          .then(() => onRemove(item.id))
+          .catch(e => alert('Failed: ' + e.message));
+      }
+
+      return hs('div', { className: 'checklist-item' }, [
+        h('input', {
+          type: 'checkbox',
+          checked: item.completed,
+          onChange: handleToggle,
+          key: 'cb',
+        }),
+        editing
+          ? hs('div', { style: { flex: 1, display: 'flex', gap: 4 }, key: 'edit' }, [
+              h('input', {
+                type: 'text', value: editText, onChange: e => setEditText(e.target.value),
+                onKeyDown: e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false); },
+                autoFocus: true, style: { flex: 1, padding: '2px 6px', border: '1px solid #d0d7de', borderRadius: 4, fontSize: 13 },
+                key: 'input',
+              }),
+              h('button', { className: 'btn-add', onClick: handleSave, key: 's', style: { fontSize: 11, padding: '2px 8px' } }, 'Save'),
+              h('button', { className: 'btn-cancel', onClick: () => setEditing(false), key: 'c' }, 'Cancel'),
+            ])
+          : h('span', {
+              className: 'checklist-item-text' + (item.completed ? ' completed' : ''),
+              onClick: () => setEditing(true),
+              key: 'text',
+            }, item.text),
+        !editing ? hs('div', { className: 'checklist-item-actions', key: 'actions' }, [
+          h('button', { className: 'btn-checklist-action', onClick: () => setEditing(true), key: 'e' }, 'Edit'),
+          h('button', { className: 'btn-checklist-action danger', onClick: handleRemove, key: 'r' }, 'Remove'),
+        ]) : null,
+      ]);
+    }
+
+    function ChecklistBlock({ checklist, actingAgentId, onRemoved, onUpdated }) {
+      const [items, setItems] = useState(checklist.items || []);
+      const [newText, setNewText] = useState('');
+      const [adding, setAdding] = useState(false);
+      const actor = actingAgentId || 'web-user';
+
+      const total = items.length;
+      const done = items.filter(i => i.completed).length;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      function addItem() {
+        if (!newText.trim() || adding) return;
+        setAdding(true);
+        postJson('/api/checklists/' + checklist.id + '/items', { text: newText.trim(), actorId: actor })
+          .then(created => { setItems(prev => [...prev, created]); setNewText(''); })
+          .catch(e => alert('Failed: ' + e.message))
+          .finally(() => setAdding(false));
+      }
+
+      function handleToggle(updated) {
+        setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+      }
+
+      function handleUpdate(updated) {
+        setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+      }
+
+      function handleRemoveItem(itemId) {
+        setItems(prev => prev.filter(i => i.id !== itemId));
+      }
+
+      function removeChecklist() {
+        if (!confirm('Delete checklist "' + checklist.title + '" and all its items?')) return;
+        deleteJson('/api/checklists/' + checklist.id + '?actorId=' + encodeURIComponent(actor))
+          .then(() => onRemoved(checklist.id))
+          .catch(e => alert('Failed: ' + e.message));
+      }
+
+      return hs('div', { className: 'checklist-block' }, [
+        hs('div', { className: 'checklist-header', key: 'h' }, [
+          h('span', { className: 'checklist-title', key: 't' }, checklist.title),
+          hs('div', { style: { display: 'flex', alignItems: 'center', gap: 8 }, key: 'r' }, [
+            h('span', { className: 'checklist-progress', key: 'p' }, done + '/' + total),
+            h('button', { className: 'btn-delete-checklist', onClick: removeChecklist, key: 'd' }, 'Delete'),
+          ]),
+        ]),
+        total > 0 ? h('div', { className: 'progress-bar', key: 'bar' },
+          h('div', { className: 'progress-fill', style: { width: pct + '%' } })) : null,
+        hs('div', { key: 'items' },
+          items.sort((a, b) => a.position - b.position).map(item =>
+            h(ChecklistItemRow, {
+              item, actingAgentId,
+              onToggle: handleToggle,
+              onUpdate: handleUpdate,
+              onRemove: handleRemoveItem,
+              key: item.id,
+            })
+          )
+        ),
+        hs('div', { className: 'add-item-form', key: 'add' }, [
+          h('input', {
+            type: 'text', value: newText, placeholder: 'Add an item...',
+            onChange: e => setNewText(e.target.value),
+            onKeyDown: e => { if (e.key === 'Enter') addItem(); },
+            key: 'input',
+          }),
+          h('button', {
+            className: 'btn-add', onClick: addItem, disabled: !newText.trim() || adding,
+            key: 'btn', style: { fontSize: 12, padding: '4px 10px' },
+          }, adding ? 'Adding...' : 'Add'),
+        ]),
+      ]);
+    }
+
+    function ChecklistSection({ cardId, actingAgentId }) {
+      const [checklists, setChecklists] = useState([]);
+      const [newTitle, setNewTitle] = useState('');
+      const [creating, setCreating] = useState(false);
+      const [showForm, setShowForm] = useState(false);
+      const actor = actingAgentId || 'web-user';
+
+      useEffect(() => {
+        fetchJson('/api/cards/' + cardId + '/checklists').then(setChecklists).catch(() => {});
+      }, [cardId]);
+
+      function createChecklist() {
+        if (!newTitle.trim() || creating) return;
+        setCreating(true);
+        postJson('/api/cards/' + cardId + '/checklists', { title: newTitle.trim(), actorId: actor })
+          .then(created => {
+            setChecklists(prev => [...prev, { ...created, items: [] }]);
+            setNewTitle('');
+            setShowForm(false);
+          })
+          .catch(e => alert('Failed: ' + e.message))
+          .finally(() => setCreating(false));
+      }
+
+      function handleRemoved(checklistId) {
+        setChecklists(prev => prev.filter(c => c.id !== checklistId));
+      }
+
+      return hs('div', { className: 'checklist-section' }, [
+        h('div', { className: 'modal-section-title', key: 't' }, 'Checklists'),
+        checklists.length === 0 && !showForm
+          ? h('div', { className: 'empty', key: 'empty' }, 'No checklists')
+          : null,
+        hs('div', { key: 'lists' },
+          checklists.sort((a, b) => a.position - b.position).map(cl =>
+            h(ChecklistBlock, { checklist: cl, actingAgentId, onRemoved: handleRemoved, key: cl.id })
+          )
+        ),
+        showForm
+          ? hs('div', { className: 'add-checklist-form', key: 'form' }, [
+              h('input', {
+                type: 'text', value: newTitle, placeholder: 'Checklist title',
+                onChange: e => setNewTitle(e.target.value),
+                onKeyDown: e => { if (e.key === 'Enter') createChecklist(); if (e.key === 'Escape') setShowForm(false); },
+                autoFocus: true, key: 'input',
+              }),
+              h('button', {
+                className: 'btn-add', onClick: createChecklist, disabled: !newTitle.trim() || creating,
+                key: 'btn', style: { fontSize: 12, padding: '4px 10px' },
+              }, creating ? 'Creating...' : 'Add'),
+              h('button', { className: 'btn-cancel', onClick: () => { setShowForm(false); setNewTitle(''); }, key: 'cancel' }, 'Cancel'),
+            ])
+          : h('button', {
+              className: 'add-card-btn',
+              style: { marginTop: 8 },
+              onClick: () => setShowForm(true),
+              key: 'add-btn',
+            }, '+ Add Checklist'),
+      ]);
+    }
+
+    function CardModal({ card, columns, onClose, agents, actingAgentId, boardId }) {
       const [comments, setComments] = useState([]);
 
       useEffect(() => {
@@ -1302,12 +1850,10 @@
           h('span', { key: 'cr' }, ' Created: ' + timeAgo(card.created_at)),
           card.updated_at ? h('span', { key: 'up' }, '  Updated: ' + timeAgo(card.updated_at)) : null,
         ]),
-        card.labels && card.labels.length > 0
-          ? hs('div', { className: 'card-labels', style: { marginBottom: 12 }, key: 'labels' },
-              card.labels.map((lb, i) => h(LabelBadge, { ...lb, key: i })))
-          : null,
+        h(CardLabelPicker, { card, boardId: boardId, actingAgentId, key: 'labels' }),
         h(AssigneeSection, { card, agents, actingAgentId, key: 'assignee' }),
         h(DescriptionSection, { card, actingAgentId, agents, key: 'desc' }),
+        h(ChecklistSection, { cardId: card.id, actingAgentId, key: 'checklists' }),
         h(MoveCardSection, { card, columns, onClose, actingAgentId, key: 'move' }),
         h('div', { className: 'modal-section-title', key: 'ct' },
           'Comments (' + comments.length + ')'),
@@ -1385,16 +1931,257 @@
       } catch { return []; }
     }
 
-    function BoardCard({ board, onClick }) {
+    function VisibilityBadge({ visibility }) {
+      const isPrivate = visibility === 'private';
+      const cls = 'visibility-badge ' + (isPrivate ? 'visibility-private' : 'visibility-public');
+      return h('span', { className: cls }, isPrivate ? 'Private' : 'Public');
+    }
+
+    function LabelManager({ boardId, actingAgentId }) {
+      const [labels, setLabels] = useState([]);
+      const [newName, setNewName] = useState('');
+      const [newColor, setNewColor] = useState('#888888');
+      const [editingId, setEditingId] = useState(null);
+      const [editName, setEditName] = useState('');
+      const [editColor, setEditColor] = useState('');
+      const [saving, setSaving] = useState(false);
+
+      const actor = actingAgentId || 'web-user';
+
+      useEffect(() => {
+        fetchJson('/api/boards/' + boardId + '/labels').then(setLabels).catch(() => {});
+      }, [boardId]);
+
+      function createLabel() {
+        if (!newName.trim() || saving) return;
+        setSaving(true);
+        postJson('/api/boards/' + boardId + '/labels', { name: newName.trim(), color: newColor, actorId: actor })
+          .then(created => { setLabels(prev => [...prev, created]); setNewName(''); setNewColor('#888888'); })
+          .catch(e => alert('Failed: ' + e.message))
+          .finally(() => setSaving(false));
+      }
+
+      function startEdit(label) {
+        setEditingId(label.id);
+        setEditName(label.name);
+        setEditColor(label.color);
+      }
+
+      function saveEdit() {
+        if (!editName.trim() || saving) return;
+        setSaving(true);
+        patchJson('/api/labels/' + editingId, { name: editName.trim(), color: editColor, actorId: actor })
+          .then(updated => {
+            setLabels(prev => prev.map(l => l.id === editingId ? updated : l));
+            setEditingId(null);
+          })
+          .catch(e => alert('Failed: ' + e.message))
+          .finally(() => setSaving(false));
+      }
+
+      function removeLabel(labelId) {
+        if (!confirm('Remove this label from the board and all cards?')) return;
+        setSaving(true);
+        deleteJson('/api/labels/' + labelId + '?actorId=' + encodeURIComponent(actor))
+          .then(() => setLabels(prev => prev.filter(l => l.id !== labelId)))
+          .catch(e => alert('Failed: ' + e.message))
+          .finally(() => setSaving(false));
+      }
+
+      return hs('div', { className: 'label-manager' }, [
+        labels.length === 0
+          ? h('div', { style: { color: '#8b949e', fontSize: 13 }, key: 'empty' }, 'No labels defined')
+          : hs('div', { key: 'list' },
+              labels.map(label =>
+                editingId === label.id
+                  ? hs('div', { className: 'label-form-row', key: label.id }, [
+                      h('input', { type: 'color', value: editColor, onChange: e => setEditColor(e.target.value), key: 'c' }),
+                      h('input', { type: 'text', value: editName, onChange: e => setEditName(e.target.value), key: 'n',
+                        onKeyDown: e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditingId(null); } }),
+                      h('button', { className: 'btn-add', onClick: saveEdit, disabled: saving, key: 's', style: { fontSize: 12, padding: '4px 10px' } }, 'Save'),
+                      h('button', { className: 'btn-cancel', onClick: () => setEditingId(null), key: 'x' }, 'Cancel'),
+                    ])
+                  : hs('div', { className: 'label-registry-item', key: label.id }, [
+                      h('div', { className: 'label-color-dot', style: { background: label.color }, key: 'd' }),
+                      h('span', { className: 'label-name', key: 'n' }, label.name),
+                      hs('div', { className: 'label-actions', key: 'a' }, [
+                        h('button', { className: 'btn-label-action', onClick: () => startEdit(label), key: 'e' }, 'Edit'),
+                        h('button', { className: 'btn-label-action danger', onClick: () => removeLabel(label.id), key: 'r' }, 'Remove'),
+                      ]),
+                    ])
+              )),
+        hs('div', { className: 'label-form-row', key: 'add' }, [
+          h('input', { type: 'color', value: newColor, onChange: e => setNewColor(e.target.value), key: 'c' }),
+          h('input', { type: 'text', value: newName, placeholder: 'New label name', onChange: e => setNewName(e.target.value), key: 'n',
+            onKeyDown: e => { if (e.key === 'Enter') createLabel(); } }),
+          h('button', { className: 'btn-add', onClick: createLabel, disabled: !newName.trim() || saving, key: 'b',
+            style: { fontSize: 12, padding: '4px 10px' } }, saving ? 'Adding...' : 'Add'),
+        ]),
+      ]);
+    }
+
+    function BoardSettingsModal({ board, agents, actingAgentId, onClose, onUpdated }) {
+      const [visibility, setVisibility] = useState(board.visibility || 'public');
+      const [members, setMembers] = useState(board.members || []);
+      const [owner, setOwner] = useState(board.owner || board.created_by || '');
+      const [saving, setSaving] = useState(false);
+      const [newMemberId, setNewMemberId] = useState('');
+      const [newOwnerId, setNewOwnerId] = useState('');
+
+      const actor = actingAgentId || 'web-user';
+      const isOwner = actor === owner;
+
+      function toggleVisibility() {
+        const newVis = visibility === 'public' ? 'private' : 'public';
+        setSaving(true);
+        patchJson('/api/boards/' + board.id + '/visibility', { visibility: newVis, actorId: actor })
+          .then(function () { setVisibility(newVis); if (onUpdated) onUpdated(); })
+          .catch(function (e) { alert('Failed: ' + e.message); })
+          .finally(function () { setSaving(false); });
+      }
+
+      function addMember() {
+        if (!newMemberId) return;
+        setSaving(true);
+        postJson('/api/boards/' + board.id + '/members', { memberId: newMemberId, actorId: actor })
+          .then(function (result) { setMembers(result.members); setNewMemberId(''); if (onUpdated) onUpdated(); })
+          .catch(function (e) { alert('Failed: ' + e.message); })
+          .finally(function () { setSaving(false); });
+      }
+
+      function removeMember(agentId) {
+        setSaving(true);
+        deleteJson('/api/boards/' + board.id + '/members/' + agentId + '?actorId=' + encodeURIComponent(actor))
+          .then(function (result) { setMembers(result.members); if (onUpdated) onUpdated(); })
+          .catch(function (e) { alert('Failed: ' + e.message); })
+          .finally(function () { setSaving(false); });
+      }
+
+      function transferOwnership() {
+        if (!newOwnerId || newOwnerId === owner) return;
+        if (!confirm('Transfer ownership of "' + board.name + '" to ' + newOwnerId + '?')) return;
+        setSaving(true);
+        patchJson('/api/boards/' + board.id + '/owner', { newOwnerId: newOwnerId, actorId: actor })
+          .then(function () { setOwner(newOwnerId); if (onUpdated) onUpdated(); })
+          .catch(function (e) { alert('Failed: ' + e.message); })
+          .finally(function () { setSaving(false); });
+      }
+
+      var availableForMember = Array.from(agents.values()).filter(function (a) { return a.id !== owner && !members.includes(a.id); });
+      var availableForOwner = Array.from(agents.values()).filter(function (a) { return a.id !== owner; });
+
+      return h('div', { className: 'modal-overlay', onClick: function (e) {
+        if (e.target === e.currentTarget) onClose();
+      }}, hs('div', { className: 'modal-content' }, [
+        h('button', { className: 'modal-close', onClick: onClose, key: 'x' }, '\u00D7'),
+        h('div', { className: 'modal-title', key: 'title' }, 'Board Settings'),
+
+        hs('div', { className: 'settings-section', key: 'owner' }, [
+          h('div', { className: 'settings-label', key: 'lbl' }, 'Owner'),
+          hs('div', { className: 'settings-row', key: 'row' }, [
+            h(AgentDisplay, { actorId: owner, agents: agents, key: 'disp' }),
+          ]),
+          isOwner ? hs('div', { style: { marginTop: 8 }, key: 'transfer' }, [
+            h('div', { className: 'settings-label', key: 'lbl2' }, 'Transfer ownership'),
+            hs('div', { className: 'settings-row', key: 'row2' }, [
+              h('select', {
+                value: newOwnerId,
+                onChange: function (e) { setNewOwnerId(e.target.value); },
+                style: { padding: '4px 8px', borderRadius: 6, border: '1px solid #d0d7de', fontSize: 13 },
+                key: 'sel',
+              }, [
+                h('option', { value: '', key: '' }, '-- Select new owner --'),
+              ].concat(availableForOwner.map(function (a) { return h('option', { value: a.id, key: a.id }, a.display_name); }))),
+              h('button', {
+                className: 'btn-add',
+                onClick: transferOwnership,
+                disabled: !newOwnerId || saving,
+                key: 'btn',
+                style: { fontSize: 12, padding: '4px 10px' },
+              }, 'Transfer'),
+            ]),
+          ]) : null,
+        ]),
+
+        hs('div', { className: 'settings-section', key: 'vis' }, [
+          h('div', { className: 'settings-label', key: 'lbl' }, 'Visibility'),
+          hs('div', { className: 'settings-row', key: 'row' }, [
+            h(VisibilityBadge, { visibility: visibility, key: 'badge' }),
+            isOwner ? hs('label', { className: 'toggle-switch', key: 'toggle' }, [
+              h('input', {
+                type: 'checkbox',
+                checked: visibility === 'private',
+                onChange: toggleVisibility,
+                disabled: saving,
+                key: 'input',
+              }),
+              h('span', { className: 'toggle-slider', key: 'slider' }),
+            ]) : null,
+            h('span', { style: { fontSize: 12, color: '#656d76' }, key: 'hint' },
+              visibility === 'private' ? 'Only owner and members can access' : 'Anyone can access'),
+          ]),
+        ]),
+
+        visibility === 'private' ? hs('div', { className: 'settings-section', key: 'members' }, [
+          h('div', { className: 'settings-label', key: 'lbl' }, 'Members'),
+          members.length === 0
+            ? h('div', { style: { color: '#8b949e', fontSize: 13 }, key: 'empty' }, 'No members added yet')
+            : hs('div', { className: 'member-list', key: 'list' },
+                members.map(function (mid) { return hs('div', { className: 'member-item', key: mid }, [
+                  h(AgentDisplay, { actorId: mid, agents: agents, key: 'disp' }),
+                  isOwner ? h('button', {
+                    className: 'btn-remove-member',
+                    onClick: function () { removeMember(mid); },
+                    disabled: saving,
+                    key: 'rm',
+                  }, 'Remove') : null,
+                ]); })),
+          isOwner && availableForMember.length > 0 ? hs('div', { className: 'settings-row', style: { marginTop: 8 }, key: 'add' }, [
+            h('select', {
+              value: newMemberId,
+              onChange: function (e) { setNewMemberId(e.target.value); },
+              style: { padding: '4px 8px', borderRadius: 6, border: '1px solid #d0d7de', fontSize: 13 },
+              key: 'sel',
+            }, [
+              h('option', { value: '', key: '' }, '-- Add member --'),
+            ].concat(availableForMember.map(function (a) { return h('option', { value: a.id, key: a.id }, a.display_name); }))),
+            h('button', {
+              className: 'btn-add',
+              onClick: addMember,
+              disabled: !newMemberId || saving,
+              key: 'btn',
+              style: { fontSize: 12, padding: '4px 10px' },
+            }, 'Add'),
+          ]) : null,
+        ]) : null,
+
+        hs('div', { className: 'settings-section', key: 'labels' }, [
+          h('div', { className: 'settings-label', key: 'lbl' }, 'Label Registry'),
+          h(LabelManager, { boardId: board.id, actingAgentId, key: 'mgr' }),
+        ]),
+
+        !isOwner ? h('div', {
+          style: { fontSize: 12, color: '#8b949e', fontStyle: 'italic', marginTop: 8 },
+          key: 'note',
+        }, 'Only the board owner can change settings. Select the owner agent in "Acting as" to make changes.') : null,
+      ]));
+    }
+
+    function BoardCard({ board, onClick, agents }) {
       const cols = parseColumns(board);
+      const ownerAgent = agents.get(board.owner || board.created_by);
+      const ownerLabel = ownerAgent ? ownerAgent.display_name : (board.owner || board.created_by || 'unknown');
       return hs('div', {
         className: 'board-card',
         onClick: () => onClick(board),
       }, [
-        h('div', { className: 'board-card-name', key: 'name' }, board.name),
+        hs('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }, key: 'top' }, [
+          h('div', { className: 'board-card-name', style: { marginBottom: 0 }, key: 'name' }, board.name),
+          h(VisibilityBadge, { visibility: board.visibility || 'public', key: 'vis' }),
+        ]),
         hs('div', { className: 'board-card-info', key: 'info' }, [
           h('span', { key: 'cols' }, cols.length + ' column' + (cols.length !== 1 ? 's' : '') + ': ' + cols.join(', ')),
-          board.created_by ? h('span', { key: 'by' }, 'Created by: ' + board.created_by) : null,
+          h('span', { className: 'owner-badge', key: 'owner' }, 'Owner: ' + ownerLabel),
           board.created_at ? h('span', { key: 'date' }, 'Created: ' + timeAgo(board.created_at)) : null,
         ]),
       ]);
@@ -1495,7 +2282,7 @@
       }, board.name);
     }
 
-    function BoardListView({ boards, onSelectBoard, onRefresh, actingAgentId }) {
+    function BoardListView({ boards, onSelectBoard, onRefresh, actingAgentId, agents }) {
       const [showCreate, setShowCreate] = useState(false);
 
       function handleCreated(newBoard) {
@@ -1510,6 +2297,7 @@
           ...boards.map(b => h(BoardCard, {
             board: b,
             onClick: () => navigateTo('#/board/' + b.id),
+            agents: agents,
             key: b.id,
           })),
           h(CreateBoardCard, { onClick: () => setShowCreate(true), key: 'create' }),
@@ -1535,6 +2323,7 @@
       const [error, setError] = useState(null);
       const [agents, setAgents] = useState(new Map());
       const [actingAgentId, setActingAgentId] = useState('');
+      const [showSettings, setShowSettings] = useState(false);
 
       const boardId = route.boardId;
       const view = route.view;
@@ -1560,12 +2349,13 @@
       const loadBoardData = useCallback(async () => {
         if (!boardId) return;
         try {
-          const [boardList, cardData, eventData] = await Promise.all([
+          const [boardList, boardDetail, cardData, eventData] = await Promise.all([
             fetchJson('/api/boards'),
+            fetchJson('/api/boards/' + boardId),
             fetchJson('/api/boards/' + boardId + '/cards'),
             fetchJson('/api/events'),
           ]);
-          setBoards(boardList);
+          setBoards(boardList.map(function (b) { return b.id === boardId ? Object.assign({}, b, boardDetail) : b; }));
           setCards(cardData);
           setEvents(eventData);
           setLastUpdated(new Date());
@@ -1643,6 +2433,16 @@
                 onChange: e => navigateTo('#/board/' + e.target.value),
               }, boards.map(b => h('option', { value: b.id, key: b.id }, b.name)))
             : null,
+          view === 'board' && currentBoard
+            ? h(VisibilityBadge, { visibility: currentBoard.visibility || 'public', key: 'vis' })
+            : null,
+          view === 'board' && currentBoard
+            ? h('button', {
+                className: 'board-settings-btn',
+                key: 'settings',
+                onClick: () => setShowSettings(true),
+              }, 'Settings')
+            : null,
         ]),
         hs('div', { className: 'header-right', key: 'r', style: { display: 'flex', alignItems: 'center', gap: '16px' } }, [
           agents.size > 0
@@ -1679,6 +2479,7 @@
             onSelectBoard: (b) => navigateTo('#/board/' + b.id),
             onRefresh: loadBoards,
             actingAgentId,
+            agents,
             key: 'list',
           }),
         ]);
@@ -1714,7 +2515,19 @@
               onClose: () => setSelectedCard(null),
               agents,
               actingAgentId,
+              boardId: boardId,
               key: 'modal',
+            })
+          : null,
+
+        showSettings && currentBoard
+          ? h(BoardSettingsModal, {
+              board: currentBoard,
+              agents,
+              actingAgentId,
+              onClose: () => setShowSettings(false),
+              onUpdated: () => { loadBoardData(); loadBoards(); },
+              key: 'settings-modal',
             })
           : null,
       ]);

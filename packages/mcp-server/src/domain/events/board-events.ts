@@ -10,27 +10,62 @@ export type BoardCreated = {
   readonly occurredAt: string;
 };
 
-export type BoardEvent = BoardCreated;
-
-type CreateBoardParams = {
+export type BoardVisibilityChanged = {
+  readonly type: 'BoardVisibilityChanged';
   readonly streamId: string;
+  readonly version: number;
   readonly actorId: string;
-  readonly name: string;
-  readonly columns: string[];
+  readonly payload: {
+    readonly visibility: 'public' | 'private';
+  };
+  readonly occurredAt: string;
 };
 
-export function createBoardCreatedEvent(
-  params: CreateBoardParams,
-): BoardCreated {
-  return {
-    type: 'BoardCreated',
-    streamId: params.streamId,
-    version: 1,
-    actorId: params.actorId,
-    payload: {
-      name: params.name,
-      columns: params.columns,
-    },
-    occurredAt: new Date().toISOString(),
+export type BoardOwnershipTransferred = {
+  readonly type: 'BoardOwnershipTransferred';
+  readonly streamId: string;
+  readonly version: number;
+  readonly actorId: string;
+  readonly payload: {
+    readonly fromOwner: string;
+    readonly toOwner: string;
   };
-}
+  readonly occurredAt: string;
+};
+
+export type BoardMemberAdded = {
+  readonly type: 'BoardMemberAdded';
+  readonly streamId: string;
+  readonly version: number;
+  readonly actorId: string;
+  readonly payload: {
+    readonly memberId: string;
+  };
+  readonly occurredAt: string;
+};
+
+export type BoardMemberRemoved = {
+  readonly type: 'BoardMemberRemoved';
+  readonly streamId: string;
+  readonly version: number;
+  readonly actorId: string;
+  readonly payload: {
+    readonly memberId: string;
+  };
+  readonly occurredAt: string;
+};
+
+export type BoardEvent =
+  | BoardCreated
+  | BoardVisibilityChanged
+  | BoardOwnershipTransferred
+  | BoardMemberAdded
+  | BoardMemberRemoved;
+
+export {
+  createBoardCreatedEvent,
+  createBoardVisibilityChangedEvent,
+  createBoardOwnershipTransferredEvent,
+  createBoardMemberAddedEvent,
+  createBoardMemberRemovedEvent,
+} from './board-event-factories.js';

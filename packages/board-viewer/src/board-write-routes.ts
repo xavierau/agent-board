@@ -21,8 +21,8 @@ boardWriteRouter.post('/api/boards', (req: Request, res: Response) => {
   const now = new Date().toISOString();
 
   db.prepare(
-    'INSERT INTO boards (id, name, columns, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(id, name.trim(), JSON.stringify(boardColumns), actor, now, now);
+    'INSERT INTO boards (id, name, columns, created_by, owner, visibility, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, name.trim(), JSON.stringify(boardColumns), actor, actor, 'public', now, now);
 
   appendEvent(id, 'BoardCreated', { name: name.trim(), columns: boardColumns }, actor);
   writeAudit({

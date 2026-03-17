@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { db } from './db.js';
 import { readAuditLog } from './audit-log.js';
+import { canAccessBoard } from './board-access.js';
 
 export const readRouter = Router();
 
@@ -31,18 +32,37 @@ export function formatCard(row: CardRow) {
   return { ...rest, archived: Boolean(archived), labels: parseLabels(label_data) };
 }
 
-readRouter.get('/api/boards', (_req: Request, res: Response) => {
-  const boards = db.prepare('SELECT * FROM boards ORDER BY created_at DESC').all();
-  res.json(boards);
+readRouter.get('/api/boards', (req: Request, res: Response) => {
+  const actorId = req.query.actorId as string | undefined;
+  const boards = db.prepare('SELECT * FROM boards ORDER BY created_at DESC').all() as any[];
+  if (!actorId) {
+    res.json(boards.filter(b => b.visibility === 'public'));
+    return;
+  }
+  res.json(boards.filter(b => canAccessBoard(db, b.id, actorId)));
 });
 
 readRouter.get('/api/boards/:id', (req: Request, res: Response) => {
-  const board = db.prepare('SELECT * FROM boards WHERE id = ?').get(req.params.id);
+  const id = req.params.id as string;
+  const board = db.prepare('SELECT * FROM boards WHERE id = ?').get(id) as any;
   if (!board) { res.status(404).json({ error: 'Board not found' }); return; }
-  res.json(board);
+  const actorId = req.query.actorId as string | undefined;
+  if (actorId && !canAccessBoard(db, id, actorId)) {
+    res.status(403).json({ error: 'Access denied: board is private' }); return;
+  }
+  if (!actorId && board.visibility === 'private') {
+    res.status(403).json({ error: 'Access denied: board is private' }); return;
+  }
+  const members = db.prepare('SELECT agent_id FROM board_members WHERE board_id = ?')
+    .all(id) as { agent_id: string }[];
+  res.json({ ...board, members: members.map(m => m.agent_id) });
 });
 
 readRouter.get('/api/boards/:id/cards', (req: Request, res: Response) => {
+  const actorId = req.query.actorId as string | undefined;
+  if (actorId && !canAccessBoard(db, req.params.id as string, actorId)) {
+    res.status(403).json({ error: 'Access denied: board is private' }); return;
+  }
   const columnFilter = req.query.column as string | undefined;
   const baseQuery = `
     SELECT c.*, GROUP_CONCAT(cl.label || '|' || cl.color, ';;') as label_data
