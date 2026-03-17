@@ -42,16 +42,19 @@ describe('SqliteCardReadModel', () => {
     model.upsert(card);
     model.upsert({ ...card, id: 'card-2', column: 'doing' });
 
-    const todoCards = model.findByColumn('todo');
-    expect(todoCards).toHaveLength(1);
-    expect(todoCards[0].id).toBe('card-1');
+    const result = model.findByColumn('todo');
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].id).toBe('card-1');
+    expect(result.total).toBe(1);
   });
 
   it('findAll returns all cards', () => {
     model.upsert(card);
     model.upsert({ ...card, id: 'card-2', column: 'doing' });
 
-    expect(model.findAll()).toHaveLength(2);
+    const result = model.findAll();
+    expect(result.items).toHaveLength(2);
+    expect(result.total).toBe(2);
   });
 
   it('upsert updates existing card', () => {
@@ -66,9 +69,10 @@ describe('SqliteCardReadModel', () => {
     model.upsert(card);
     model.upsert({ ...card, id: 'card-2', boardId: 'board-2' });
 
-    const boardCards = model.findByBoard('board-1');
-    expect(boardCards).toHaveLength(1);
-    expect(boardCards[0].id).toBe('card-1');
+    const result = model.findByBoard('board-1');
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].id).toBe('card-1');
+    expect(result.total).toBe(1);
   });
 
   it('archives a card', () => {
@@ -88,5 +92,57 @@ describe('SqliteCardReadModel', () => {
 
     const found = model.findById('card-1');
     expect(found?.labels).toEqual([{ label: 'bug', color: 'red' }]);
+  });
+
+  describe('pagination', () => {
+    beforeEach(() => {
+      for (let i = 0; i < 5; i++) {
+        model.upsert({
+          ...card,
+          id: `card-${i}`,
+          position: i,
+        });
+      }
+    });
+
+    it('defaults to page 1 and pageSize 50', () => {
+      const result = model.findAll();
+      expect(result.page).toBe(1);
+      expect(result.pageSize).toBe(50);
+      expect(result.items).toHaveLength(5);
+      expect(result.total).toBe(5);
+    });
+
+    it('paginates with custom page and pageSize', () => {
+      const page1 = model.findAll({ page: 1, pageSize: 2 });
+      expect(page1.items).toHaveLength(2);
+      expect(page1.total).toBe(5);
+      expect(page1.page).toBe(1);
+      expect(page1.pageSize).toBe(2);
+
+      const page2 = model.findAll({ page: 2, pageSize: 2 });
+      expect(page2.items).toHaveLength(2);
+
+      const page3 = model.findAll({ page: 3, pageSize: 2 });
+      expect(page3.items).toHaveLength(1);
+    });
+
+    it('returns empty items for page beyond data', () => {
+      const result = model.findAll({ page: 10, pageSize: 2 });
+      expect(result.items).toHaveLength(0);
+      expect(result.total).toBe(5);
+    });
+
+    it('paginates findByColumn', () => {
+      const result = model.findByColumn('todo', { page: 1, pageSize: 2 });
+      expect(result.items).toHaveLength(2);
+      expect(result.total).toBe(5);
+    });
+
+    it('paginates findByBoard', () => {
+      const result = model.findByBoard('board-1', { page: 1, pageSize: 3 });
+      expect(result.items).toHaveLength(3);
+      expect(result.total).toBe(5);
+    });
   });
 });

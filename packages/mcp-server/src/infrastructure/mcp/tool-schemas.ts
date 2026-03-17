@@ -67,6 +67,8 @@ export const archiveCardSchema = z.object({
 export const listCardsSchema = z.object({
   column: z.string().optional(),
   boardId: z.string().uuid().optional(),
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().positive().max(100).optional(),
 });
 
 export const assignCardSchema = z.object({
@@ -126,4 +128,10 @@ export const addCommentSchema = z.object({
 
 export const listCommentsSchema = z.object({
   cardId: z.string().uuid(),
+});
+
+// Event tools
+export const listEventsSchema = z.object({
+  sinceId: z.number().int().nonnegative().default(0),
+  limit: z.number().int().positive().max(1000).default(100),
 });

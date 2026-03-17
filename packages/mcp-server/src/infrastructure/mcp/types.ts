@@ -25,6 +25,7 @@ import type { ToggleChecklistItemUseCase } from '../../application/use-cases/tog
 import type { UpdateChecklistItemUseCase } from '../../application/use-cases/update-checklist-item.js';
 import type { RemoveChecklistItemUseCase } from '../../application/use-cases/remove-checklist-item.js';
 import type { ListChecklistsUseCase } from '../../application/use-cases/list-checklists.js';
+import type { ListEventsUseCase } from '../../application/use-cases/list-events.js';
 import type { ActorValidator } from '../validation/actor-validator.js';
 import type { AgentRegistry } from '../../domain/repositories/agent-registry.js';
 import type { BoardReadModel } from '../../domain/repositories/board-read-model.js';
@@ -58,6 +59,7 @@ export type UseCases = {
   readonly updateChecklistItem: UpdateChecklistItemUseCase;
   readonly removeChecklistItem: RemoveChecklistItemUseCase;
   readonly listChecklists: ListChecklistsUseCase;
+  readonly listEvents: ListEventsUseCase;
 };
 
 export type McpDeps = {

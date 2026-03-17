@@ -25,7 +25,9 @@ describe('ListCardsUseCase', () => {
   });
 
   it('returns empty list when no cards', () => {
-    expect(listCards.execute({})).toEqual([]);
+    const result = listCards.execute({});
+    expect(result.items).toEqual([]);
+    expect(result.total).toBe(0);
   });
 
   it('returns all cards without filter', () => {
@@ -43,7 +45,8 @@ describe('ListCardsUseCase', () => {
     });
 
     const result = listCards.execute({});
-    expect(result).toHaveLength(2);
+    expect(result.items).toHaveLength(2);
+    expect(result.total).toBe(2);
   });
 
   it('filters cards by column', () => {
@@ -66,8 +69,13 @@ describe('ListCardsUseCase', () => {
       boardId: BOARD,
     });
 
-    expect(listCards.execute({ column: 'todo' })).toHaveLength(2);
-    expect(listCards.execute({ column: 'doing' })).toHaveLength(1);
+    const todoResult = listCards.execute({ column: 'todo' });
+    expect(todoResult.items).toHaveLength(2);
+    expect(todoResult.total).toBe(2);
+
+    const doingResult = listCards.execute({ column: 'doing' });
+    expect(doingResult.items).toHaveLength(1);
+    expect(doingResult.total).toBe(1);
   });
 
   it('filters cards by boardId', () => {
@@ -82,7 +90,49 @@ describe('ListCardsUseCase', () => {
       boardId: 'board-b',
     });
 
-    expect(listCards.execute({ boardId: 'board-a' })).toHaveLength(1);
-    expect(listCards.execute({ boardId: 'board-b' })).toHaveLength(1);
+    const resultA = listCards.execute({ boardId: 'board-a' });
+    expect(resultA.items).toHaveLength(1);
+
+    const resultB = listCards.execute({ boardId: 'board-b' });
+    expect(resultB.items).toHaveLength(1);
+  });
+
+  it('paginates results', () => {
+    for (let i = 0; i < 5; i++) {
+      createCard.execute({
+        title: `Card ${i}`,
+        column: 'todo',
+        actorId: ACTOR,
+        boardId: BOARD,
+      });
+    }
+
+    const page1 = listCards.execute({ page: 1, pageSize: 2 });
+    expect(page1.items).toHaveLength(2);
+    expect(page1.total).toBe(5);
+    expect(page1.page).toBe(1);
+    expect(page1.pageSize).toBe(2);
+
+    const page3 = listCards.execute({ page: 3, pageSize: 2 });
+    expect(page3.items).toHaveLength(1);
+    expect(page3.total).toBe(5);
+  });
+
+  it('paginates with boardId filter', () => {
+    for (let i = 0; i < 3; i++) {
+      createCard.execute({
+        title: `Card ${i}`,
+        actorId: ACTOR,
+        boardId: BOARD,
+      });
+    }
+
+    const result = listCards.execute({
+      boardId: BOARD,
+      page: 1,
+      pageSize: 2,
+    });
+    expect(result.items).toHaveLength(2);
+    expect(result.total).toBe(3);
   });
 });

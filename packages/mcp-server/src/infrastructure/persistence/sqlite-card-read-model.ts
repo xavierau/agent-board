@@ -2,33 +2,28 @@ import type Database from 'better-sqlite3';
 import type {
   CardReadModel,
   CardView,
+  PaginatedResult,
+  PaginationInput,
 } from '../../domain/repositories/card-read-model.js';
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 50;
 
 export class SqliteCardReadModel implements CardReadModel {
   private readonly upsertStmt: Database.Statement;
   private readonly byIdStmt: Database.Statement;
-  private readonly byColumnStmt: Database.Statement;
-  private readonly byBoardStmt: Database.Statement;
-  private readonly allStmt: Database.Statement;
   private readonly archiveStmt: Database.Statement;
   private readonly assignStmt: Database.Statement;
+  private readonly db: Database.Database;
 
   constructor(db: Database.Database) {
+    this.db = db;
     this.upsertStmt = db.prepare(
       `INSERT OR REPLACE INTO cards
          (id, title, description, column_name, position, board_id, archived, assignee, labels, created_at, updated_at)
        VALUES (@id, @title, @description, @column, @position, @boardId, @archived, @assignee, @labels, @createdAt, @updatedAt)`,
     );
     this.byIdStmt = db.prepare('SELECT * FROM cards WHERE id = ?');
-    this.byColumnStmt = db.prepare(
-      'SELECT * FROM cards WHERE column_name = ? ORDER BY position',
-    );
-    this.byBoardStmt = db.prepare(
-      'SELECT * FROM cards WHERE board_id = ? ORDER BY column_name, position',
-    );
-    this.allStmt = db.prepare(
-      'SELECT * FROM cards ORDER BY column_name, position',
-    );
     this.archiveStmt = db.prepare(
       'UPDATE cards SET archived = 1 WHERE id = ?',
     );
@@ -58,19 +53,37 @@ export class SqliteCardReadModel implements CardReadModel {
     return row ? toCardView(row) : null;
   }
 
-  findByColumn(column: string): CardView[] {
-    const rows = this.byColumnStmt.all(column) as CardRow[];
-    return rows.map(toCardView);
+  findByColumn(
+    column: string,
+    pagination?: PaginationInput,
+  ): PaginatedResult<CardView> {
+    return this.paginate(
+      'WHERE column_name = ?',
+      'ORDER BY position',
+      [column],
+      pagination,
+    );
   }
 
-  findByBoard(boardId: string): CardView[] {
-    const rows = this.byBoardStmt.all(boardId) as CardRow[];
-    return rows.map(toCardView);
+  findByBoard(
+    boardId: string,
+    pagination?: PaginationInput,
+  ): PaginatedResult<CardView> {
+    return this.paginate(
+      'WHERE board_id = ?',
+      'ORDER BY column_name, position',
+      [boardId],
+      pagination,
+    );
   }
 
-  findAll(): CardView[] {
-    const rows = this.allStmt.all() as CardRow[];
-    return rows.map(toCardView);
+  findAll(pagination?: PaginationInput): PaginatedResult<CardView> {
+    return this.paginate(
+      '',
+      'ORDER BY column_name, position',
+      [],
+      pagination,
+    );
   }
 
   archive(id: string): void {
@@ -79,6 +92,26 @@ export class SqliteCardReadModel implements CardReadModel {
 
   assign(id: string, assigneeId: string | null): void {
     this.assignStmt.run(assigneeId, id);
+  }
+
+  private paginate(
+    whereClause: string,
+    orderClause: string,
+    params: unknown[],
+    pagination?: PaginationInput,
+  ): PaginatedResult<CardView> {
+    const page = pagination?.page ?? DEFAULT_PAGE;
+    const pageSize = pagination?.pageSize ?? DEFAULT_PAGE_SIZE;
+    const offset = (page - 1) * pageSize;
+
+    const countSql = `SELECT COUNT(*) as cnt FROM cards ${whereClause}`;
+    const countRow = this.db.prepare(countSql).get(...params) as { cnt: number };
+    const total = countRow.cnt;
+
+    const dataSql = `SELECT * FROM cards ${whereClause} ${orderClause} LIMIT ? OFFSET ?`;
+    const rows = this.db.prepare(dataSql).all(...params, pageSize, offset) as CardRow[];
+
+    return { items: rows.map(toCardView), total, page, pageSize };
   }
 }
 

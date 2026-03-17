@@ -106,7 +106,7 @@ describe('MCP Server creation', () => {
 
     // List cards
     const cards = deps.useCases.listCards.execute({});
-    expect(cards).toHaveLength(1);
+    expect(cards.items).toHaveLength(1);
 
     // Move card
     const moved = deps.useCases.moveCard.execute({

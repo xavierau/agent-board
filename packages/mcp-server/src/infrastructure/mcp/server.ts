@@ -9,6 +9,7 @@ import { registerBoardAccessTools } from './board-access-tools.js';
 import { registerBoardLabelTools } from './board-label-tools.js';
 import { registerChecklistTools } from './checklist-tools.js';
 import { registerChecklistItemTools } from './checklist-item-tools.js';
+import { registerEventTools } from './event-tools.js';
 
 export type { McpDeps, UseCases } from './types.js';
 
@@ -27,6 +28,7 @@ export function createMcpServer(deps: McpDeps): McpServer {
   registerBoardLabelTools(server, deps);
   registerChecklistTools(server, deps);
   registerChecklistItemTools(server, deps);
+  registerEventTools(server, deps);
 
   return server;
 }

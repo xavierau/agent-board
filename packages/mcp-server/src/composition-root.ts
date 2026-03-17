@@ -38,6 +38,7 @@ import { ToggleChecklistItemUseCase } from './application/use-cases/toggle-check
 import { UpdateChecklistItemUseCase } from './application/use-cases/update-checklist-item.js';
 import { RemoveChecklistItemUseCase } from './application/use-cases/remove-checklist-item.js';
 import { ListChecklistsUseCase } from './application/use-cases/list-checklists.js';
+import { ListEventsUseCase } from './application/use-cases/list-events.js';
 import type { OrgActorValidator } from './infrastructure/validation/actor-validator.js';
 import type Database from 'better-sqlite3';
 
@@ -95,6 +96,7 @@ export function buildUseCases(
       updateChecklistItem: new UpdateChecklistItemUseCase(i.eventStore, i.checklistReadModel, i.checklistProjection),
       removeChecklistItem: new RemoveChecklistItemUseCase(i.eventStore, i.checklistReadModel, i.checklistProjection),
       listChecklists: new ListChecklistsUseCase(i.checklistReadModel),
+      listEvents: new ListEventsUseCase(i.eventStore),
     },
     boardReadModel: i.boardReadModel,
     cardReadModel: i.cardReadModel,

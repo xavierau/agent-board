@@ -1,3 +1,15 @@
+export type PaginationInput = {
+  readonly page?: number;
+  readonly pageSize?: number;
+};
+
+export type PaginatedResult<T> = {
+  readonly items: T[];
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+};
+
 export type CardView = {
   readonly id: string;
   readonly title: string;
@@ -15,9 +27,9 @@ export type CardView = {
 export interface CardReadModel {
   upsert(card: CardView): void;
   findById(id: string): CardView | null;
-  findByColumn(column: string): CardView[];
-  findByBoard(boardId: string): CardView[];
-  findAll(): CardView[];
+  findByColumn(column: string, pagination?: PaginationInput): PaginatedResult<CardView>;
+  findByBoard(boardId: string, pagination?: PaginationInput): PaginatedResult<CardView>;
+  findAll(pagination?: PaginationInput): PaginatedResult<CardView>;
   archive(id: string): void;
   assign(id: string, assigneeId: string | null): void;
 }
